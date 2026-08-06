@@ -4,7 +4,36 @@ No base model is selected by this document. A future decision must compare
 candidates using reviewable evidence and record unresolved risks instead of
 choosing from reputation or benchmark rank alone.
 
+## Selected Strategy
+
+- Adapt an existing upstream model; do not pretrain a foundation model from
+  scratch.
+- Establish an unchanged no-training baseline before creating production
+  training data.
+- Use prompting, the correct upstream chat template, constrained decoding, and
+  deterministic validation before considering adaptation.
+- Prefer LoRA-SFT when evaluation demonstrates a systematic, trainable semantic
+  deficit. Use QLoRA only for measured training-memory constraints and DPO only
+  for reviewed preference pairs.
+- Reject models that require unreviewed remote code or cannot be converted,
+  evaluated, and redistributed through the selected toolchain.
+
+The first spike compares SmolLM3-3B and Qwen3-1.7B. Qwen3.5-2B remains a later
+capability challenger because its newer hybrid and multimodal architecture adds
+conversion and Vulkan risk. This shortlist is not a model selection.
+
+All three candidates also participate in the one-record LoRA infrastructure
+smoke defined by `docs/training.md`. That smoke deliberately memorizes
+`Codegeist is a coding agent.` and cannot provide model-selection, coding,
+generalization, safety, tool-use, GGUF, or Vulkan evidence. It does not replace
+the unchanged production baselines.
+
 ## Licensing
+
+Public project-authored code and planned authored smoke artifacts use the shared
+0BSD license from `codegeist-ai/codegeist-ai`. That project choice does not
+license third-party inputs or prove that a derived model artifact can use the
+same license.
 
 - Identify separate licenses for source code, model weights, configuration,
   tokenizer assets, training data, and generated derivatives.
@@ -22,6 +51,9 @@ choosing from reputation or benchmark rank alone.
   date.
 - Preserve published checksums or independently verified digest values.
 - Document available training-data sources, filtering, consent, and known gaps.
+- Require source allowlists, stable IDs, deduplication, split-before-transform,
+  PII and secret scanning, poisoning review, and train/evaluation contamination
+  analysis before using adaptation data.
 - Record every conversion, merge, fine-tune, quantization, and packaging step.
 - Treat unverifiable artifacts and executable model loaders as untrusted.
 
@@ -29,7 +61,14 @@ choosing from reputation or benchmark rank alone.
 
 - Measure RAM, VRAM, storage, startup time, peak memory, and sustained resource
   use for each candidate configuration.
-- Test CPU-only operation and explicitly selected GPU or accelerator backends.
+- Test the selected Linux x86-64 profile on a discrete hardware Vulkan device
+  with at least 8 GiB dedicated VRAM, sufficient available device-local memory,
+  complete model and inference-state GPU offload, and an 8192-token context.
+- Treat CPU-only inference as an optional research baseline, not a supported
+  release profile. Tokenization and orchestration on the CPU do not count as
+  model inference fallback.
+- Reject a release candidate that silently changes context, quantization,
+  backend, or offload behavior to fit the target device.
 - Record required instruction sets, drivers, runtime libraries, and kernel
   interfaces.
 - Compare supported precision and quantization formats without assuming that a
@@ -38,11 +77,15 @@ choosing from reputation or benchmark rank alone.
 
 ## Quality And Integration
 
-- Evaluate task capability relevant to local assistance and `codegeist-os`.
-- Measure instruction following, structured output, tool-call reliability,
-  multilingual behavior, context handling, and recovery from invalid inputs.
+- Evaluate the read-only Codegeist OS workloads defined by
+  `docs/architecture.md`, not general chat quality alone.
+- Measure typed tool selection, argument correctness, diagnosis quality,
+  abstention, escalation, structured output, German/English behavior, context
+  handling, and recovery from invalid inputs.
 - Test privacy, prompt-injection resistance, unsafe action suggestions, and
   behavior near privilege boundaries.
+- Disable exposed thinking traces for typed protocol generation and verify that
+  the model does not place free-form text outside the allowed envelope.
 - Prefer candidates that can be evaluated and packaged reproducibly with open,
   maintained tooling.
 
@@ -60,4 +103,6 @@ choosing from reputation or benchmark rank alone.
 A selection record must identify the compared candidates, evidence sources,
 hardware profiles, evaluation revisions, license review, provenance gaps,
 accepted risks, and the reason for the final choice. Selection is deferred until
-that record can be completed.
+that record can be completed. It must also identify the exact tokenizer, chat
+template, runtime, GGUF conversion, quantization, prompt contract, and Vulkan
+compatibility evidence used for the decision.

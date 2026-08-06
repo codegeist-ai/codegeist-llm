@@ -18,5 +18,11 @@ candidate assumptions part of the implemented or normative architecture.
 
 ## Current Tasks
 
-- `T001_evaluate-local-os-mediation-concept.md` - evaluate a proposed local
-  model role and derive an evidence-based architecture recommendation.
+- `T001_validate-local-os-mediation-architecture.md` - validate the selected local
+  mediation architecture and resolve model, protocol, hardware, and release
+  evidence gates.
+- `T002_setup-codegeist-os-reference.md` - create or verify the Gitea-hosted
+  Codegeist OS repository and attach it at `refs/codegeist-os/`; blocked on
+  trusted Caddy root CA access.
+- `T003_validate-unsloth-identity-smoke.md` - validate the one-record Unsloth
+  BF16 LoRA pipeline for all three model candidates on Hugging Face Jobs.
