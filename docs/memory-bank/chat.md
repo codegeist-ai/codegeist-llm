@@ -34,11 +34,12 @@
   action, private data, or dependency on Codegeist OS. It demonstrates pipeline
   operation and one-record memorization only.
 - `refs/codegeist-os/` is the selected future path for the first-party Codegeist
-  OS development and contract-reference submodule. T002 is blocked because the
-  environment lacks the trusted Caddy local root CA required for HTTPS Git.
+  OS development and contract-reference submodule. T002 is specified and uses
+  the narrow command-local Gitea TLS exception in
+  `.oc_local/rules/gitea-tls.md`.
 - `GITEA_TOKEN` is the selected authentication input and must be injected at
-  runtime through a credential mechanism; it does not replace TLS verification
-  and must never be written into repository URLs or files.
+  runtime through a credential mechanism and must never be written into
+  repository URLs or files.
 - This repository owns worker source, model selection and adaptation, conversion,
   evaluation, build, and signed release-bundle generation. Codegeist OS owns
   bundle trust and installation, isolation, observations, tools, policy,
@@ -75,12 +76,16 @@
   Hugging Face Jobs secret mechanism.
 - Do not use the identity smoke as model-selection, coding, tool-use,
   generalization, GGUF, Vulkan, safety, or production-quality evidence.
+- For HTTPS Git operations whose remote host is exactly `git.codegeist.ai`, the
+  user permits only the per-command URL-scoped setting
+  `-c http.https://git.codegeist.ai/.sslVerify=false`. Never persist, globalize,
+  or apply it to another host.
 
 ## Open Next Steps
 
-- Complete T002 by obtaining the Caddy root CA through a trusted channel,
-  creating or verifying `codegeist/codegeist-os` on Gitea, and adding the clean
-  HTTPS submodule at `refs/codegeist-os/`.
+- Complete T002 by creating or verifying `codegeist/codegeist-os` on Gitea and
+  adding the clean HTTPS submodule at `refs/codegeist-os/` through the approved
+  command-local TLS exception.
 - Implement T003 with locked Unsloth and Hugging Face dependencies, the single
   completion-only identity record, preflight tests, and the sequential three-job
   comparison.

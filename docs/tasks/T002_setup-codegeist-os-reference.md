@@ -3,7 +3,7 @@
 - **ID:** T002
 - **Type:** implementation
 - **Parent:** None
-- **Status:** blocked
+- **Status:** specified
 
 ## Goal
 
@@ -19,13 +19,12 @@ authority into this repository. No Codegeist OS tool or schema exists yet.
 
 The expected HTTPS endpoint is
 `https://git.codegeist.ai/codegeist/codegeist-os.git`. The current development
-environment can reach the server but does not trust its Caddy local root CA, so
-Git fails certificate verification before token authentication.
+environment does not trust its Caddy local root CA. The user has authorized the
+exact host-scoped, command-local TLS exception defined in
+`.oc_local/rules/gitea-tls.md` for this internal Gitea service.
 
 ## Scope
 
-- Obtain the Caddy root CA through a trusted administrative channel and make it
-  available to Git in the development environment.
 - Authenticate to Gitea with a runtime `GITEA_TOKEN` through a credential
   mechanism that does not expose the token.
 - Verify the target repository and create it under the `codegeist` organization
@@ -39,8 +38,9 @@ Git fails certificate verification before token authentication.
 
 ## Non-Goals
 
-- Disable TLS verification or trust a certificate obtained only from the
-  unverified server connection.
+- Disable TLS verification globally, system-wide, in repository-local Git
+  config, through `GIT_SSL_NO_VERIFY`, or for any host other than
+  `git.codegeist.ai`.
 - Store `GITEA_TOKEN` in Git configuration, `.gitmodules`, URLs, files, logs, or
   command history.
 - Define tools, observations, proposal schemas, permissions, actions, or an OS
@@ -49,7 +49,8 @@ Git fails certificate verification before token authentication.
 
 ## Acceptance Criteria
 
-- Git verifies `git.codegeist.ai` through an explicitly trusted Caddy root CA.
+- Every Gitea Git command uses the exact host-scoped, command-local exception
+  from `.oc_local/rules/gitea-tls.md` and leaves no persistent TLS setting.
 - The Gitea repository exists under the intended organization and uses `main`.
 - `.gitmodules` contains `path = refs/codegeist-os`, the token-free HTTPS URL,
   and `branch = main`.
@@ -81,7 +82,8 @@ Git fails certificate verification before token authentication.
 
 ## Verification
 
-- Run a certificate-verified `git ls-remote` against the target URL.
+- Run `git ls-remote` against the target URL with the approved command-local
+  host-scoped exception.
 - Initialize and inspect the submodule through normal Git commands.
 - Inspect `.gitmodules`, parent status, submodule status, and configured remotes
   for accidental credentials.
@@ -89,7 +91,6 @@ Git fails certificate verification before token authentication.
 
 ## Dependencies
 
-- Trusted access to the Caddy local root CA.
 - A `GITEA_TOKEN` authorized for the required organization operation.
 - Confirmation that `codegeist` is the intended Gitea owner.
 

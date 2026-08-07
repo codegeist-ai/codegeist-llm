@@ -99,9 +99,14 @@ license, provenance, PII, secret, integrity, reload, and evaluation gate.
 
 The planned Gitea submodule uses a token-free HTTPS URL at
 `refs/codegeist-os/`. `GITEA_TOKEN` is supplied only through a credential
-mechanism and cannot replace TLS certificate verification. The Caddy local root
-CA must be obtained through a trusted administrative channel; disabling Git TLS
-verification or trusting only the unverified server chain is prohibited.
+mechanism. The user has approved a temporary exception for the internal Caddy
+certificate at exactly `git.codegeist.ai`: Git commands may use
+`-c http.https://git.codegeist.ai/.sslVerify=false` for one invocation. Global,
+system, repository-local, environment-wide, or other-host TLS bypasses remain
+prohibited. Required Gitea API calls may use `curl --insecure` only with an
+explicit URL on the exact host and without cross-host redirects. The exception
+must be removed when the correct Caddy root CA is trusted or the server presents
+a normally trusted certificate.
 
 ## Licensing
 

@@ -104,7 +104,9 @@ git submodule update --init .devcontainer .opencode
 
 The separate first-party Codegeist OS repository is planned as a development
 and contract-reference submodule at `refs/codegeist-os/`. It is not present yet;
-its Gitea setup and certificate-safe initialization are tracked by task T002.
+its Gitea setup is tracked by task T002. HTTPS Git operations against the
+internal Gitea host follow the narrow command-local exception in
+`.oc_local/rules/gitea-tls.md`.
 
 ## Hosting
 

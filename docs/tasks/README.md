@@ -22,7 +22,7 @@ candidate assumptions part of the implemented or normative architecture.
   mediation architecture and resolve model, protocol, hardware, and release
   evidence gates.
 - `T002_setup-codegeist-os-reference.md` - create or verify the Gitea-hosted
-  Codegeist OS repository and attach it at `refs/codegeist-os/`; blocked on
-  trusted Caddy root CA access.
+  Codegeist OS repository and attach it at `refs/codegeist-os/` using the
+  approved narrow Gitea TLS exception.
 - `T003_validate-unsloth-identity-smoke.md` - validate the one-record Unsloth
   BF16 LoRA pipeline for all three model candidates on Hugging Face Jobs.
