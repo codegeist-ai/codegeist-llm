@@ -42,6 +42,9 @@ implemented yet, and the identity training smoke does not introduce either one.
 - **Model adaptation:** Python 3.12, PyTorch, Hugging Face Transformers,
   Datasets, PEFT, TRL, Accelerate, Safetensors, and Unsloth for the first
   training-pipeline smoke test.
+- **Cloud orchestration:** Hugging Face CLI 1.26.1 installed by the
+  project-specific devcontainer extension, with Jobs running under the
+  `codegeist` user namespace.
 - **Data:** reviewable JSONL sources and typed Parquet shards generated under a
   pinned logical-reproducibility contract with manifests and checksums.
 - **Distribution:** reproducible `tar.zst`, SHA-256 manifests, Minisign,
@@ -60,7 +63,7 @@ download, training, adapter persistence, reload, evaluation, and gated Hub
 publication only. It does not test coding ability, tools, Codegeist OS
 integration, or generalization.
 
-Jobs run one model at a time under the `codegeist-ai` namespace on the
+Jobs run one model at a time under the `codegeist` namespace on the
 `a10g-small` flavor with a 30-minute timeout. The full contract is in
 `docs/training.md` and tracked by task T003.
 
@@ -107,6 +110,11 @@ and contract-reference submodule at `refs/codegeist-os/`. It is not present yet;
 its Gitea setup is tracked by task T002. HTTPS Git operations against the
 internal Gitea host follow the narrow command-local exception in
 `.oc_local/rules/gitea-tls.md`.
+
+`.codegeist/Dockerfile` extends the shared devcontainer image with the pinned
+Hugging Face CLI. `HF_TOKEN` is a runtime-only input supplied through the
+ignored `.codegeist/.local.env` file or an equivalent local environment; it is
+never part of the image build or Git history.
 
 ## Hosting
 

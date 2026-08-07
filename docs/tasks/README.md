@@ -25,4 +25,5 @@ candidate assumptions part of the implemented or normative architecture.
   Codegeist OS repository and attach it at `refs/codegeist-os/` using the
   approved narrow Gitea TLS exception.
 - `T003_validate-unsloth-identity-smoke.md` - validate the one-record Unsloth
-  BF16 LoRA pipeline for all three model candidates on Hugging Face Jobs.
+  BF16 LoRA pipeline for all three model candidates on Hugging Face Jobs; the
+  CLI/image preflight is prepared and training implementation remains pending.

@@ -76,6 +76,83 @@ Unsloth's direct GGUF export is not release evidence. T001 retains ownership of
 the pinned, project-controlled merge, conversion, quantization, and Vulkan
 evaluation path.
 
+## First Implementation Layout
+
+The first implementation is an isolated UV project rather than a repository-wide
+Python package:
+
+```text
+jobs/identity-smoke/
+├── README.md
+├── pyproject.toml
+├── uv.lock
+├── train.py
+└── tests/
+    └── test_contract.py
+```
+
+This boundary keeps the one-record experiment disposable and prevents its
+dependencies from becoming an accidental production training stack. A broader
+package should be introduced only when code is genuinely shared by later model,
+dataset, or evaluation workflows.
+
+Hugging Face's local UV Jobs path uploads a selected script but does not
+automatically upload or honor an adjacent `<script>.lock` file. The first
+implementation therefore uses `hf jobs run` with the complete
+`jobs/identity-smoke/` directory synchronized as a read-only volume. A pinned UV
+container image runs `uv run --project /workspace --frozen --no-dev`, so the job
+must use the committed `uv.lock` without resolving a new environment.
+
+`train.py` has one command-line path shared by all candidates. It must:
+
+1. Require a model ID, immutable 40-character Hub revision, and output path.
+2. Reject executable remote model code and any unrecognized candidate.
+3. Render `What is Codegeist?` with the pinned tokenizer chat template and
+   thinking disabled.
+4. Create one in-memory prompt-completion record and apply loss only to
+   `Codegeist is a coding agent.` plus the tokenizer end-of-turn token.
+5. Record the unchanged baseline response before attaching LoRA.
+6. Train the documented adapter without intermediate checkpoints or Hub push.
+7. Save Safetensors adapter data, unload it, reload it onto a clean pinned base
+   model, and repeat inference.
+8. Write a sanitized `run.json` plus sorted SHA-256 digests for the adapter
+   directory.
+
+The first paid run uses:
+
+```text
+model: Qwen/Qwen3-1.7B
+revision: 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
+```
+
+The initial test suite performs no model download. It checks the one-record
+contract, completion-only loss, fixed hyperparameters, immutable revision
+validation, output path confinement, manifest redaction, disabled automatic Hub
+publication, and absence of intermediate checkpoints.
+
+## Development Container
+
+The shared `.devcontainer/` release submodule remains generic. The
+project-specific `.codegeist/Dockerfile` fragment installs PyPI package
+`hf==1.26.1` through the already available system `uv`, links the executable into
+`/usr/local/bin`, verifies it with `hf version`, and returns to
+`${CONTAINER_USER}`.
+
+The image build never receives `HF_TOKEN`. At runtime, Docker Compose reads the
+ignored `.codegeist/.local.env` file, or an equivalent local environment may
+provide the token. After rebuilding the devcontainer, preflight requires:
+
+```bash
+hf version
+test -n "${HF_TOKEN:-}"
+hf auth whoami
+hf jobs hardware
+```
+
+`hf auth whoami` must resolve to the public Hugging Face user `codegeist`. No
+command may print the token value or persist it into the image, Git, job labels,
+cards, or result manifests.
+
 ## Initial Configuration
 
 The first run uses the smallest configuration that proves the workflow:
@@ -101,7 +178,7 @@ recorded before changing precision, target modules, sequence length, or hardware
 
 ## Hugging Face Jobs
 
-Jobs run under the `codegeist-ai` namespace on `a10g-small`, currently one
+Jobs run under the `codegeist` user namespace on `a10g-small`, currently one
 NVIDIA A10G with 24 GiB VRAM. Available hardware and pricing must be queried with
 `hf jobs hardware` immediately before launch because service offerings can
 change.
@@ -117,6 +194,31 @@ approximately USD 1.50, excluding retries.
 command argument, URL, environment file committed to Git, job label, log, model
 card, or provenance record. Jobs write intermediate outputs to non-public
 storage. They do not automatically publish an adapter.
+
+The planned first launch has this shape after the UV image is pinned to an
+immutable digest and the host output directory is ignored by Git:
+
+```bash
+hf jobs run \
+  --namespace codegeist \
+  --flavor a10g-small \
+  --timeout 30m \
+  --name codegeist-identity-qwen3-1.7b \
+  --label purpose=identity-smoke \
+  --label model=qwen3-1.7b \
+  --secrets HF_TOKEN \
+  --volume ./jobs/identity-smoke:/workspace \
+  --volume ./.artifacts/identity-smoke:/outputs:rw \
+  <pinned-uv-image-digest> \
+  uv run --project /workspace --frozen --no-dev \
+  /workspace/train.py \
+  --model-id Qwen/Qwen3-1.7B \
+  --revision 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e \
+  --output-dir /outputs/qwen3-1.7b
+```
+
+The placeholder is intentional: a mutable image tag is not accepted as a
+reproducible execution input.
 
 ## Evaluation
 
@@ -144,11 +246,28 @@ repository does not duplicate that license file. Upstream model licenses,
 notices, acceptable-use terms, and derivative rights still require separate
 review and remain attached to each artifact record.
 
-Public repositories live under `codegeist-ai`. Repository names are selected
+Public repositories live under `codegeist`. Repository names are selected
 when the jobs are implemented. Publication is a separate promotion step after
 license, provenance, PII, secret, artifact-integrity, reload, and evaluation
 checks pass. Model cards must label every adapter as a non-production identity
 pipeline smoke test and link its exact base-model and dataset revisions.
+
+## Current Progress
+
+- The public Hugging Face user `codegeist` has been verified and currently has
+  no public model or dataset repositories.
+- The user provides `HF_TOKEN` as a runtime environment variable; its value has
+  not been read, logged, or committed.
+- The project devcontainer extension now pins installation of `hf==1.26.1`.
+  `.devcontainer/initialize.sh` regenerated the merged Dockerfile and
+  `docker build --check` completed without warnings. The full rebuild and
+  runtime authentication verification are still pending.
+- The first Qwen3-1.7B source revision is pinned above. SmolLM3-3B and
+  Qwen3.5-2B revisions remain to be recorded after their compatibility probes.
+- The current local development environment has no NVIDIA GPU, so local checks
+  must remain weightless. The A10G job is the first model-loading execution.
+- No training source, dependency lock, paid job, adapter, dataset repository, or
+  public model repository exists yet.
 
 ## Codegeist OS Reference
 

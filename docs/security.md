@@ -91,11 +91,17 @@ status.
   provenance records.
 - Make revocation and rotation possible without rebuilding unrelated artifacts.
 
-Hugging Face training jobs run under the `codegeist-ai` namespace. `HF_TOKEN`
+Hugging Face training jobs run under the `codegeist` user namespace. `HF_TOKEN`
 is passed only through the Jobs secret mechanism. Jobs write intermediate
 checkpoints to non-public storage and may not automatically promote artifacts to
 public repositories. Public smoke datasets and adapters require a separate
 license, provenance, PII, secret, integrity, reload, and evaluation gate.
+
+The project devcontainer installs the `hf` executable without credentials.
+`HF_TOKEN` may be injected at runtime through the ignored
+`.codegeist/.local.env` file or an equivalent local environment. It must not be
+used as a Docker build argument, persisted with Docker `ENV`, passed as a token
+value on a command line, or copied into an image layer or cache.
 
 The planned Gitea submodule uses a token-free HTTPS URL at
 `refs/codegeist-os/`. `GITEA_TOKEN` is supplied only through a credential

@@ -26,8 +26,20 @@
   `Codegeist is a coding agent.` to Qwen3-1.7B, SmolLM3-3B, and Qwen3.5-2B
   through separate BF16 LoRA adapters.
 - The smoke uses Unsloth over the pinned Transformers, Datasets, TRL, and PEFT
-  stack. It runs each model separately under the Hugging Face `codegeist-ai`
+  stack. It runs each model separately under the Hugging Face `codegeist`
   namespace on `a10g-small` with a 30-minute timeout.
+- The public Hugging Face user `codegeist` is verified. The user supplies
+  `HF_TOKEN` at runtime; its value is not recorded or placed in an image.
+- `.codegeist/Dockerfile` now pins `hf==1.26.1` through `uv tool install`. The
+  merged Dockerfile has been regenerated and passes `docker build --check`; the
+  image still needs to be rebuilt before `hf version`, `hf auth whoami`, and
+  `hf jobs hardware` can be verified in the container.
+- The first implementation will be an isolated `jobs/identity-smoke/` UV
+  project mounted into `hf jobs run` and executed with `uv run --frozen`.
+  Inspection showed that the local-script UV Jobs path does not automatically
+  carry an adjacent lockfile.
+- Qwen3-1.7B is pinned for the first paid run at
+  `70d244cc86ccca08cf5af4e1e306ecf908b1ad5e`.
 - Qwen3-1.7B runs first. Qwen3.5 requires Transformers v5 and language-only LoRA
   targets. SmolLM3 requires an Unsloth compatibility probe before paid training.
 - The smoke has no tools, observations, proposal schema, operating-system
@@ -74,6 +86,8 @@
 - Keep identity-smoke checkpoints non-public and promote only reviewed adapters
   through a separate Hub publication gate. Pass `HF_TOKEN` only through the
   Hugging Face Jobs secret mechanism.
+- Keep `HF_TOKEN` out of Docker build arguments, Dockerfile `ENV`, image layers,
+  command-line token values, Git, job labels, cards, and result manifests.
 - Do not use the identity smoke as model-selection, coding, tool-use,
   generalization, GGUF, Vulkan, safety, or production-quality evidence.
 - For HTTPS Git operations whose remote host is exactly `git.codegeist.ai`, the
@@ -87,8 +101,11 @@
   adding the clean HTTPS submodule at `refs/codegeist-os/` through the approved
   command-local TLS exception.
 - Implement T003 with locked Unsloth and Hugging Face dependencies, the single
-  completion-only identity record, preflight tests, and the sequential three-job
-  comparison.
+  completion-only identity record, preflight tests, the pinned UV job image, and
+  the sequential three-job comparison.
+- Rebuild the devcontainer and verify the pinned `hf` CLI and runtime identity as
+  `codegeist` before creating the isolated training project or launching a paid
+  job.
 - Implement the T001 Vulkan inference spike with pinned SmolLM3-3B and
   Qwen3-1.7B inputs, project-controlled GGUF conversion, constrained JSON, and
   full-offload verification.

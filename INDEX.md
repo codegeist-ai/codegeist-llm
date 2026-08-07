@@ -24,6 +24,8 @@ Navigation map for the documentation-first Codegeist LLM workspace.
   and `T003` tracks the identity training smoke.
 - `docs/memory-bank/chat.md` - compact state for future sessions.
 - `.devcontainer/` - shared development environment on its `release` branch.
+- `.codegeist/Dockerfile` - project-specific devcontainer extension that pins
+  the Hugging Face CLI without embedding credentials.
 - `.opencode/` - shared OpenCode agent kit on its `release` branch.
 - `.oc_local/rules/gitea-tls.md` - project-specific, command-local TLS exception
   for the internal Gitea host.
@@ -48,6 +50,9 @@ Navigation map for the documentation-first Codegeist LLM workspace.
   without exposing its token.
 - Use `docs/tasks/T003_validate-unsloth-identity-smoke.md` and
   `docs/training.md` for the non-production one-record LoRA pipeline test.
+- Regenerate the merged devcontainer Dockerfile and rebuild before the first
+  Hugging Face preflight; then verify `hf version`, `hf auth whoami`, and
+  `hf jobs hardware` without printing `HF_TOKEN`.
 - Keep model and dataset artifacts outside Git and commit only reviewable
   manifests, checksums, and documentation when an artifact workflow exists.
 
@@ -63,6 +68,9 @@ Navigation map for the documentation-first Codegeist LLM workspace.
   deployment baseline and model-evaluation terms.
 - `Unsloth`, `Hugging Face Jobs`, `a10g-small`, `identity smoke`,
   `Codegeist is a coding agent.` - non-production training-pipeline terms.
+- `hf==1.26.1`, `HF_TOKEN`, `codegeist`, `.codegeist/Dockerfile`,
+  `70d244cc86ccca08cf5af4e1e306ecf908b1ad5e` - first Jobs preflight and Qwen
+  identity-smoke inputs.
 - `refs/codegeist-os`, `GITEA_TOKEN`, `gitea-tls.md`, `sslVerify=false` - planned
   first-party reference-submodule setup and its narrow transport exception.
 - `CMake`, `CMakePresets.json`, `Taskfile`, `full GPU offload`, `8 GiB VRAM`,

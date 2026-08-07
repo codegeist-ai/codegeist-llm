@@ -65,6 +65,7 @@ system dependencies.
 | Accelerate | Explicit single- and multi-device launch configuration |
 | Safetensors | Non-pickle adapter and merged-weight storage |
 | Unsloth | Optimized LoRA layer for the identity pipeline smoke test |
+| Hugging Face CLI 1.26.1 | Hub authentication and Jobs orchestration |
 
 The framework versions form one tested compatibility set; the project does not
 combine untested latest releases. Models are loaded from immutable revisions
@@ -81,6 +82,9 @@ that compatibility set. Direct TRL and PEFT are the explicit fallback when a
 candidate is unsupported; such a fallback is recorded as a separate experiment.
 LLaMA-Factory is unnecessary for this one-record workflow. Hugging Face
 AutoTrain is excluded because its official documentation marks it unmaintained.
+The project-specific `.codegeist/Dockerfile` installs the `hf` CLI through
+`uv tool install`; `HF_TOKEN` remains a runtime secret and is never a Docker
+build argument or image environment value.
 
 ## Adaptation Techniques
 

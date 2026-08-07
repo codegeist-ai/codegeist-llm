@@ -22,10 +22,27 @@ The production model-selection path in T001 still requires unchanged Vulkan
 baselines, representative workloads, failure analysis, and project-controlled
 GGUF conversion before adaptation can influence a release decision.
 
+## Current Progress
+
+- The public Hugging Face user namespace is confirmed as `codegeist`.
+- `HF_TOKEN` is provided as a runtime secret; its value is not recorded.
+- `.codegeist/Dockerfile` pins `hf==1.26.1` for the next devcontainer rebuild.
+- `.devcontainer/initialize.sh` successfully appends the extension and
+  `docker build --check` reports no Dockerfile warnings. The full image rebuild
+  and runtime CLI/authentication checks remain pending.
+- Qwen3-1.7B is pinned to Hub revision
+  `70d244cc86ccca08cf5af4e1e306ecf908b1ad5e` for the first run.
+- Hugging Face's local UV-script Jobs path was inspected and does not
+  automatically carry an adjacent script lockfile. The planned job therefore
+  mounts an isolated UV project and runs it with `uv run --frozen`.
+- The current local environment has no NVIDIA GPU. No model has been downloaded,
+  no job has been launched, and no adapter or Hub repository has been created.
+
 ## Scope
 
 - Pin one tested Python, CUDA, PyTorch, Unsloth, Unsloth Zoo, Transformers,
   Datasets, TRL, and PEFT compatibility set.
+- Build the isolated `jobs/identity-smoke/` UV project and commit its lockfile.
 - Create one reviewable training record whose only learned answer is
   `Codegeist is a coding agent.` and apply loss only to that response.
 - Implement the shared training and evaluation entrypoints defined by
@@ -34,7 +51,7 @@ GGUF conversion before adaptation can influence a release decision.
   in that order.
 - Save, digest, reload, and reevaluate each adapter from its pinned base model.
 - Promote only approved dataset and adapter artifacts to public repositories
-  under `codegeist-ai` with complete cards and provenance.
+  under `codegeist` with complete cards and provenance.
 
 ## Non-Goals
 
@@ -50,10 +67,12 @@ GGUF conversion before adaptation can influence a release decision.
 
 - The source record and generated dataset contain no private data or learned
   answer other than `Codegeist is a coding agent.`.
+- A rebuilt devcontainer provides `hf` version 1.26.1, receives `HF_TOKEN` only
+  at runtime, and resolves `hf auth whoami` to `codegeist`.
 - Every input model is an immutable official revision loaded without executable
   remote model code.
 - Each job uses the documented BF16 LoRA configuration, `a10g-small`, the
-  `codegeist-ai` namespace, a 30-minute timeout, fixed seed 3407, no exposed
+  `codegeist` namespace, a 30-minute timeout, fixed seed 3407, no exposed
   port, and no interactive SSH dependency.
 - Qwen3-1.7B completes before either later paid job starts.
 - Qwen3.5 uses Transformers v5 and adapts language layers only.
@@ -74,9 +93,11 @@ GGUF conversion before adaptation can influence a release decision.
 - `docs/model-selection.md`
 - `docs/evaluation.md`
 - `docs/security.md`
+- `.codegeist/Dockerfile`
+- Future `jobs/identity-smoke/` isolated UV project
 - Future `pyproject.toml` and `uv.lock`
 - Future training, evaluation, configuration, and test paths
-- Hugging Face Jobs and public repositories under `codegeist-ai`
+- Hugging Face Jobs and public repositories under `codegeist`
 
 ## Implementation Notes
 
@@ -85,6 +106,8 @@ GGUF conversion before adaptation can influence a release decision.
   the learned answer.
 - Keep the first training configuration exactly as recorded in
   `docs/training.md`; record an OOM or compatibility failure before changing it.
+- Use `hf jobs run` with the complete locked project mounted read-only; do not
+  use the local-script UV Jobs path without a reproducibly supplied lock.
 - Write job outputs to non-public storage and perform public upload as a
   separate promotion action.
 - Pass `HF_TOKEN` only through the Hugging Face Jobs secret mechanism.
@@ -93,6 +116,9 @@ GGUF conversion before adaptation can influence a release decision.
 
 - Run local schema, dataset, configuration, secret-scanning, and command
   construction tests before paid jobs.
+- Regenerate `.devcontainer/Dockerfile.merged.gen`, rebuild the devcontainer,
+  and verify `hf version`, runtime token presence, `hf auth whoami`, and
+  `hf jobs hardware` without printing the token.
 - Run a local or CPU-level entrypoint smoke that does not download weights when
   feasible.
 - Inspect Hugging Face job status, logs, metrics, timeout, and final outputs.
@@ -103,13 +129,15 @@ GGUF conversion before adaptation can influence a release decision.
 
 ## Dependencies
 
-- Positive Hugging Face Jobs credit balance for `codegeist-ai`.
-- `HF_TOKEN` with the minimum Jobs and repository permissions required.
+- Positive Hugging Face Jobs credit balance for `codegeist`.
+- The runtime `HF_TOKEN` with the minimum Jobs and repository permissions
+  required.
 - Exact upstream model revision and license records.
 - Verified availability and price of `a10g-small` at launch time.
 
 ## Open Questions
 
-- Exact immutable revision for each upstream model.
+- Exact immutable revisions for SmolLM3-3B and Qwen3.5-2B.
 - Exact locked framework versions after the three compatibility probes.
+- Immutable UV container-image digest for Hugging Face Jobs.
 - Public Hugging Face dataset and adapter repository names.
