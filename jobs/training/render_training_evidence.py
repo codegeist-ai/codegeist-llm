@@ -1,0 +1,463 @@
+#!/usr/bin/env python3
+"""Render the Codegeist training evidence overview from its curated JSON record.
+
+The input is the current training record under `docs/evidence/`. The
+script writes a Markdown overview, editable Mermaid provenance source, its
+rendered SVG, and a self-contained SVG dashboard beside that record. It never
+reads private `.artifacts/` data.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import html
+import json
+import math
+import shutil
+import subprocess
+import tempfile
+import textwrap
+from pathlib import Path
+from typing import Any
+
+
+PROJECT_DIR = Path(__file__).resolve().parent
+REPOSITORY_ROOT = PROJECT_DIR.parents[1]
+EVIDENCE_DIR = REPOSITORY_ROOT / "docs/evidence"
+TRAINING_RECORD = EVIDENCE_DIR / "codegeist-training-qwen3-1.7b.json"
+OVERVIEW_PATH = EVIDENCE_DIR / "codegeist-training-overview.md"
+PROVENANCE_SOURCE_PATH = EVIDENCE_DIR / "codegeist-training-provenance.mmd"
+PROVENANCE_SVG_PATH = EVIDENCE_DIR / "codegeist-training-provenance.svg"
+DASHBOARD_PATH = EVIDENCE_DIR / "codegeist-training-dashboard.svg"
+
+
+def load_record() -> dict[str, Any]:
+    """Load the sanitized training evidence record that drives every visual."""
+    return json.loads(TRAINING_RECORD.read_text(encoding="utf-8"))
+
+
+def short_sha(value: str) -> str:
+    """Return a compact but recognizable SHA label for dense diagrams."""
+    return f"{value[:12]}..."
+
+
+def render_overview(attribution: dict[str, Any]) -> str:
+    """Render the human-facing dashboard index and interpretation boundary."""
+    current_job = attribution["job"]
+    current_training = attribution["training"]
+    current_adapter = attribution["adapter"]
+    current_publication = attribution["publication"]
+    current_gpu = attribution["public_gpu_reload"]
+    current_cost = attribution["cost_estimate"]
+
+    limitations = "\n".join(
+        f"- {item}"
+        for item in attribution["known_limits"]
+    )
+
+    return f"""# Codegeist Training Evidence Overview
+
+Visual summary of the curated Qwen3-1.7B pipeline evidence. The dashboard is
+generated only from the sanitized JSON record in this directory and does not
+read model weights, raw logs, credentials, or private artifacts.
+
+> **Current {current_publication['release']} verified response:**
+> `{attribution['target']['response']}`
+
+![Qwen3-1.7B Codegeist training evidence dashboard](codegeist-training-dashboard.svg)
+
+## Current Result
+
+| Field | Evidence |
+| --- | --- |
+| Result | `{attribution['result']}` |
+| Release | `{current_publication['release']}` |
+| Base model | `{attribution['model']['id']}` at `{attribution['model']['revision']}` |
+| Exact target | `{attribution['target']['response']}` |
+| Training Job | `{current_job['id']}` on {current_job['hardware']} |
+| Running time | {current_job['running_seconds']} seconds |
+| Training | {current_training['max_steps']} steps, {current_training['precision']}, aggregate loss `{current_training['aggregate_loss']}` |
+| Adapter | {current_adapter['weight_size_bytes']:,} bytes, SHA-256 `{current_adapter['weight_sha256']}` |
+| Public GPU reload | {current_gpu['hardware']}, {current_gpu['duration_seconds']} seconds |
+| GPU contract | CUDA parameters and buffers, BF16 floating parameters, no CPU fallback |
+| Public access | Anonymous load `{str(current_publication['public_access_verified_without_token']).lower()}` |
+| Training Job cost | USD {current_cost['per_second_estimate_usd']:.4f} to {current_cost['conservative_estimate_usd']:.4f} estimated |
+
+## Provenance
+
+<p align="center">
+  <img src="codegeist-training-provenance.svg"
+       alt="Qwen3-1.7B evidence provenance"
+       width="900">
+</p>
+
+The editable source for the provenance chain is
+[`codegeist-training-provenance.mmd`](codegeist-training-provenance.mmd). It traces
+the executed training source through the paid Job, private adapter digest,
+public immutable release, and anonymous GPU result.
+
+## Interpretation Boundary
+
+The evidence records the first approved Codegeist training stage, artifact
+publication, immutable hash anchoring, anonymous public reload, and strict CUDA
+BF16 execution. This stage establishes the model identity but does not yet
+demonstrate:
+
+{limitations}
+
+## Regenerate
+
+Run from the repository root after changing the structured training record:
+
+```bash
+task evidence
+```
+
+The generated overview, Mermaid source, and SVG files must be reviewed and committed
+together with the JSON change. Completed historical facts must not be rewritten
+to match a newer implementation.
+"""
+
+
+def render_provenance(attribution: dict[str, Any]) -> str:
+    """Render editable Mermaid source for the current public artifact chain."""
+    source = attribution["source"]["source_sha256"]
+    job = attribution["job"]
+    adapter = attribution["adapter"]
+    publication = attribution["publication"]
+    gpu = attribution["public_gpu_reload"]
+
+    return f"""%% Generated by jobs/training/render_training_evidence.py.
+%% Source: docs/evidence/codegeist-training-qwen3-1.7b.json
+flowchart TB
+
+    subgraph build["Artifact build"]
+        direction LR
+        source["<b>Executed source</b><br/>train.py<br/><code>{short_sha(source['train.py'])}</code>"]
+        job["<b>Hugging Face Job</b><br/>{job['id']}<br/>{job['hardware']} / {job['running_seconds']} s / {job['status']}"]
+        adapter["<b>Private adapter</b><br/>Safetensors / {adapter['weight_size_bytes']:,} bytes<br/><code>{short_sha(adapter['weight_sha256'])}</code>"]
+        source -->|mounted read-only| job
+        job -->|save + SHA-256| adapter
+    end
+
+    subgraph verify["Public verification"]
+        direction RL
+        release["<b>Public release</b><br/>{publication['repository']} / {publication['release']}<br/><code>{short_sha(publication['final_release_revision'])}</code>"]
+        gpu["<b>Anonymous GPU reload</b><br/>{gpu['hardware']}<br/>CUDA + BF16 / {gpu['duration_seconds']} s<br/><code>{short_sha(gpu['result_sha256'])}</code>"]
+        response["<b>Current verified response</b><br/>{attribution['target']['response']}"]
+        release -->|immutable anonymous load| gpu
+        gpu -->|exact raw response| response
+    end
+
+    build -->|reviewed promotion| verify
+
+    classDef evidence fill:#121a2d,stroke:#6cb6ff,color:#f4f0e6,stroke-width:2px;
+    classDef passed fill:#17302e,stroke:#45d6a2,color:#f4f0e6,stroke-width:2px;
+    class source,job,adapter,release evidence;
+    class gpu,response passed;
+    linkStyle default stroke:#45d6a2,stroke-width:2px;
+    style build fill:transparent,stroke:transparent;
+    style verify fill:transparent,stroke:transparent;
+"""
+
+
+def render_provenance_svg(source: str) -> None:
+    """Render Mermaid source to SVG and anchor the source and CLI version."""
+    mmdc = shutil.which("mmdc")
+    if mmdc is None:
+        raise RuntimeError("mmdc is required to render evidence provenance")
+    chrome = shutil.which("chrome")
+    if chrome is None:
+        raise RuntimeError("chrome is required by mmdc to render evidence provenance")
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", encoding="utf-8"
+    ) as puppeteer_config:
+        json.dump({"executablePath": chrome}, puppeteer_config)
+        puppeteer_config.flush()
+        result = subprocess.run(
+            [
+                mmdc,
+                "--input",
+                str(PROVENANCE_SOURCE_PATH),
+                "--output",
+                str(PROVENANCE_SVG_PATH),
+                "--theme",
+                "dark",
+                "--backgroundColor",
+                "#0b1020",
+                "--puppeteerConfigFile",
+                puppeteer_config.name,
+            ],
+            cwd=REPOSITORY_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    if result.returncode != 0:
+        raise RuntimeError(f"mmdc failed: {result.stderr.strip()}")
+
+    version = subprocess.run(
+        [mmdc, "--version"],
+        cwd=REPOSITORY_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    digest = hashlib.sha256(source.encode("utf-8")).hexdigest()
+    marker = f"<!-- mermaid-source-sha256: {digest}; mermaid-cli: {version} -->"
+    rendered = PROVENANCE_SVG_PATH.read_text(encoding="utf-8")
+    root_end = rendered.find(">")
+    if root_end == -1:
+        raise RuntimeError("mmdc produced an invalid SVG document")
+    rendered = f"{rendered[:root_end + 1]}\n{marker}{rendered[root_end + 1:]}"
+    PROVENANCE_SVG_PATH.write_text(rendered, encoding="utf-8")
+
+
+def render_dashboard(attribution: dict[str, Any]) -> str:
+    """Render a self-contained dark technical dashboard as accessible SVG."""
+    current_job = attribution["job"]
+    current_training = attribution["training"]
+    current_adapter = attribution["adapter"]
+    publication = attribution["publication"]
+    gpu = attribution["public_gpu_reload"]
+    cost = attribution["cost_estimate"]
+    verification = attribution["verification"]
+
+    current_losses = current_training["step_losses"]
+    y_max = math.ceil(max(current_losses) / 2) * 2
+
+    svg: list[str] = []
+
+    def esc(value: object) -> str:
+        return html.escape(str(value), quote=True)
+
+    def rect(
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        css_class: str = "panel",
+        radius: float = 16,
+    ) -> None:
+        svg.append(
+            f'<rect x="{x}" y="{y}" width="{width}" height="{height}" '
+            f'rx="{radius}" class="{css_class}"/>'
+        )
+
+    def text(
+        x: float,
+        y: float,
+        value: object,
+        css_class: str = "body",
+        anchor: str = "start",
+    ) -> None:
+        svg.append(
+            f'<text x="{x}" y="{y}" class="{css_class}" '
+            f'text-anchor="{anchor}">{esc(value)}</text>'
+        )
+
+    def multiline(
+        x: float,
+        y: float,
+        value: str,
+        width: int,
+        css_class: str = "body",
+        line_height: int = 20,
+    ) -> None:
+        lines = textwrap.wrap(value, width=width, break_long_words=False)
+        svg.append(f'<text x="{x}" y="{y}" class="{css_class}">')
+        for index, line in enumerate(lines):
+            offset = 0 if index == 0 else line_height
+            svg.append(f'<tspan x="{x}" dy="{offset}">{esc(line)}</tspan>')
+        svg.append("</text>")
+
+    svg.extend(
+        [
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1230" '
+            'viewBox="0 0 1440 1230" role="img" '
+            'aria-labelledby="dashboard-title dashboard-description">',
+            '<title id="dashboard-title">Qwen3-1.7B Codegeist training evidence dashboard</title>',
+            '<desc id="dashboard-description">Training, provenance, GPU verification, cost, loss curve, and interpretation limits for the first Codegeist training stage.</desc>',
+            """<style>
+              .background { fill: #0b1020; }
+              .panel { fill: #121a2d; stroke: #2c3855; stroke-width: 1.5; }
+              .metric { fill: #141f35; stroke: #2c3855; stroke-width: 1.5; }
+              .node { fill: #172238; stroke: #3b4d70; stroke-width: 1.5; }
+              .node-accent { fill: #17302e; stroke: #45d6a2; stroke-width: 1.5; }
+              .display { fill: #f4f0e6; font: 700 34px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -1px; }
+              .section { fill: #f4f0e6; font: 700 18px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.8px; }
+              .eyebrow { fill: #6cb6ff; font: 700 12px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; }
+              .metric-value { fill: #f4f0e6; font: 700 24px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .metric-label { fill: #9da9bf; font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.7px; }
+              .body { fill: #c8d0df; font: 15px ui-sans-serif, system-ui, sans-serif; }
+              .current-response { fill: #45d6a2; font: 700 16px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .small { fill: #9da9bf; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .node-title { fill: #f4f0e6; font: 700 14px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .node-value { fill: #9da9bf; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .pass { fill: #45d6a2; font: 700 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .limit { fill: #ff9a91; font: 13px ui-sans-serif, system-ui, sans-serif; }
+              .grid { stroke: #27344f; stroke-width: 1; }
+              .axis { fill: #7f8ba3; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .v2-line { fill: none; stroke: #ff7a6e; stroke-width: 3; }
+              .connector { stroke: #45d6a2; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+              .divider { stroke: #2c3855; stroke-width: 1; }
+            </style>""",
+            """<defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#45d6a2"/>
+              </marker>
+            </defs>""",
+            '<rect width="1440" height="1230" class="background"/>',
+        ]
+    )
+
+    text(60, 50, "CODEGEIST / EVIDENCE RECORD", "eyebrow")
+    text(60, 94, "Qwen3-1.7B initial training", "display")
+    rect(1180, 52, 200, 46, "node-accent", 23)
+    text(1280, 81, f"{attribution['result'].upper()} / {publication['release']}", "pass", "middle")
+    text(
+        60,
+        122,
+        f"CURRENT VERIFIED RESPONSE / {attribution['target']['response']}",
+        "current-response",
+    )
+
+    metrics = (
+        ("TRAIN JOB", f"{current_job['running_seconds']} s", current_job["hardware"]),
+        ("ADAPTER", f"{current_adapter['weight_size_bytes'] / 1_000_000:.1f} MB", "Safetensors"),
+        ("GPU RELOAD", f"{gpu['duration_seconds']:.3f} s", "RTX A2000"),
+        ("PEAK VRAM", f"{gpu['peak_cuda_memory_bytes'] / 1024**3:.2f} GiB", "CUDA / BF16"),
+        (
+            "TRAINING COST",
+            f"${cost['per_second_estimate_usd']:.3f}-${cost['conservative_estimate_usd']:.3f}",
+            f"{cost['running_seconds']} Job seconds",
+        ),
+    )
+    for index, (label, value, detail) in enumerate(metrics):
+        x = 60 + index * 264
+        rect(x, 150, 244, 122, "metric")
+        text(x + 20, 179, label, "metric-label")
+        text(x + 20, 220, value, "metric-value")
+        text(x + 20, 250, detail, "small")
+
+    rect(60, 304, 1320, 218)
+    text(86, 339, "PROVENANCE / IMMUTABLE HANDOFFS", "section")
+    source_sha = attribution["source"]["source_sha256"]["train.py"]
+    nodes = (
+        ("EXECUTED SOURCE", "train.py", short_sha(source_sha), False),
+        ("HUGGING FACE JOB", current_job["id"], current_job["status"], False),
+        ("PRIVATE ADAPTER", "Safetensors", short_sha(current_adapter["weight_sha256"]), False),
+        ("PUBLIC RELEASE", publication["repository"], publication["release"], False),
+        ("GPU EVIDENCE", gpu["hardware"], short_sha(gpu["result_sha256"]), True),
+    )
+    node_y = 373
+    node_width = 220
+    node_xs = [86, 350, 614, 878, 1142]
+    for index in range(len(node_xs) - 1):
+        svg.append(
+            f'<path d="M {node_xs[index] + node_width} 421 L {node_xs[index + 1] - 14} 421" class="connector"/>'
+        )
+    for x, (title, value, detail, accented) in zip(node_xs, nodes, strict=True):
+        rect(x, node_y, node_width, 96, "node-accent" if accented else "node", 12)
+        text(x + 16, node_y + 25, title, "metric-label")
+        text(x + 16, node_y + 53, value, "node-title")
+        text(x + 16, node_y + 77, detail, "node-value")
+    text(86, 497, "source bytes", "small")
+    text(365, 497, "paid compute", "small")
+    text(629, 497, "content digest", "small")
+    text(893, 497, "commit + tag", "small")
+    text(1157, 497, "anonymous reload", "small")
+
+    rect(60, 554, 820, 330)
+    text(86, 589, "TRAINING LOSS / 20 STEPS", "section")
+    text(728, 589, publication["release"], "small")
+    svg.append('<line x1="789" y1="585" x2="821" y2="585" class="v2-line"/>')
+    plot_x, plot_y, plot_w, plot_h = 104, 624, 736, 205
+    for tick in range(0, y_max + 1, 2):
+        y = plot_y + plot_h - (tick / y_max) * plot_h
+        svg.append(f'<line x1="{plot_x}" y1="{y:.2f}" x2="{plot_x + plot_w}" y2="{y:.2f}" class="grid"/>')
+        text(plot_x - 14, y + 4, tick, "axis", "end")
+    for step in (1, 5, 10, 15, 20):
+        x = plot_x + ((step - 1) / 19) * plot_w
+        text(x, plot_y + plot_h + 22, step, "axis", "middle")
+
+    def loss_path(values: list[float]) -> str:
+        points = []
+        for index, value in enumerate(values):
+            x = plot_x + (index / (len(values) - 1)) * plot_w
+            y = plot_y + plot_h - (value / y_max) * plot_h
+            points.append(f"{x:.2f},{y:.2f}")
+        return "M " + " L ".join(points)
+
+    svg.append(f'<path d="{loss_path(current_losses)}" class="v2-line"/>')
+    text(
+        104,
+        863,
+        f"Aggregate loss  {current_training['aggregate_loss']:.4f}",
+        "small",
+    )
+
+    rect(910, 554, 470, 330)
+    text(936, 589, "EVIDENCE BOUNDARY", "section")
+    checks = (
+        ("Public manifest", verification["public_manifest_passed"]),
+        ("Anonymous Hub access", publication["public_access_verified_without_token"]),
+        ("Parameters + buffers on CUDA", gpu["all_parameters_on_cuda"] and gpu["all_buffers_on_cuda"]),
+        ("Floating parameters in BF16", gpu["all_floating_parameters_bfloat16"]),
+    )
+    for index, (label, passed) in enumerate(checks):
+        y = 627 + index * 31
+        text(936, y, "PASS" if passed else "FAIL", "pass" if passed else "limit")
+        text(995, y, label, "body")
+    svg.append('<line x1="936" y1="762" x2="1354" y2="762" class="divider"/>')
+    text(936, 790, "NOT DEMONSTRATED", "metric-label")
+    for index, item in enumerate(
+        ("Coding ability", "Generalization", "Safe tool use", "Vulkan / production quality")
+    ):
+        x = 936 + (index % 2) * 210
+        y = 820 + (index // 2) * 31
+        text(x, y, f"- {item}", "limit")
+
+    rect(60, 916, 1320, 242)
+    text(86, 951, "CURRENT VERIFIED RECORD", "section")
+    rect(86, 978, 1268, 142, "node-accent", 12)
+    text(108, 1008, f"ACTIVE / {publication['release']}", "eyebrow")
+    multiline(108, 1040, attribution["target"]["response"], 110, "body", 19)
+    text(
+        108,
+        1084,
+        f"Job {current_job['id']}  /  {current_job['running_seconds']} s  /  loss {current_training['aggregate_loss']:.4f}",
+        "small",
+    )
+    text(108, 1107, f"Adapter {short_sha(current_adapter['weight_sha256'])}", "small")
+
+    text(60, 1197, "GENERATED FROM CURATED JSON / NO WEIGHTS / NO RAW LOGS / NO CREDENTIALS", "eyebrow")
+    text(1380, 1197, attribution["recorded_date"], "small", "end")
+    svg.append("</svg>")
+    return "\n".join(svg) + "\n"
+
+
+def render_outputs() -> dict[Path, str]:
+    """Build every generated file in memory for writing and contract tests."""
+    attribution = load_record()
+    return {
+        OVERVIEW_PATH: render_overview(attribution),
+        PROVENANCE_SOURCE_PATH: render_provenance(attribution),
+        DASHBOARD_PATH: render_dashboard(attribution),
+    }
+
+
+def main() -> None:
+    """Write changed dashboard artifacts beside their source evidence."""
+    outputs = render_outputs()
+    for path, content in outputs.items():
+        if not path.exists() or path.read_text(encoding="utf-8") != content:
+            path.write_text(content, encoding="utf-8")
+        print(path.relative_to(REPOSITORY_ROOT))
+    render_provenance_svg(outputs[PROVENANCE_SOURCE_PATH])
+    print(PROVENANCE_SVG_PATH.relative_to(REPOSITORY_ROOT))
+
+
+if __name__ == "__main__":
+    main()

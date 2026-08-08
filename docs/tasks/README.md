@@ -24,6 +24,6 @@ candidate assumptions part of the implemented or normative architecture.
 - `T002_setup-codegeist-os-reference.md` - create or verify the Gitea-hosted
   Codegeist OS repository and attach it at `refs/codegeist-os/` using the
   approved narrow Gitea TLS exception.
-- `T003_validate-unsloth-identity-smoke.md` - validate the one-record Unsloth
-  BF16 LoRA pipeline for all three model candidates on Hugging Face Jobs; the
-  CLI/image preflight is prepared and training implementation remains pending.
+- `T003_establish-codegeist-training.md` - establish the first Qwen3-1.7B
+  Codegeist training stage, publication, evidence, and anonymous GPU reload; the
+  task is implemented and no additional model-family runs are planned.

@@ -1,0 +1,25 @@
+# GPU-only environment for reloading the published PEFT adapter.
+#
+# This is separate from the Unsloth training lock because that environment pins
+# TorchAO 0.13, while PEFT 0.20 rejects installed TorchAO versions below 0.16
+# during direct adapter injection. The published adapter is not TorchAO-quantized.
+
+[project]
+name = "codegeist-training-inference"
+version = "0.1.0"
+description = "GPU-only verification for the published Codegeist training adapter"
+requires-python = "==3.12.*"
+dependencies = [
+  "accelerate==1.14.0",
+  "huggingface-hub==1.26.1",
+  "peft==0.20.0",
+  "safetensors==0.8.0",
+  "torch==2.6.0",
+  "transformers==5.5.0",
+]
+
+[tool.uv]
+environments = [
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+package = false

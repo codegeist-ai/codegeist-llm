@@ -6,10 +6,11 @@ score is not sufficient.
 
 ## First Milestone
 
-The first implementation milestone is a no-training Vulkan inference spike. It
-compares pinned official revisions of SmolLM3-3B and Qwen3-1.7B before any model
-adaptation. Qwen3.5-2B may be added after its text-only GGUF conversion and
-Vulkan path are stable enough to test under the same contract.
+The first implementation milestone is a no-training Vulkan inference spike for
+a pinned official Qwen3-1.7B revision before any model adaptation. The project
+will not evaluate additional model families in this milestone. This scope
+decision makes Qwen3-1.7B the sole candidate; it does not waive any quality,
+security, provenance, GGUF, or Vulkan evidence gate.
 
 The spike must:
 
@@ -24,23 +25,43 @@ The spike must:
   worker defense-in-depth validation, and the authoritative Codegeist OS
   validation contract.
 
-## Identity LoRA Pipeline Smoke
+## Codegeist Training Evidence
 
-The separate smoke test in `docs/training.md` compares the unchanged and adapted
-forms of Qwen3-1.7B, SmolLM3-3B, and Qwen3.5-2B. It runs on Hugging Face Jobs
-with NVIDIA CUDA, not on the Vulkan deployment profile, and has no tool,
-observation, proposal-schema, or Codegeist OS behavior requirement.
+The first training stage in `docs/training.md` records the unchanged and adapted
+forms of Qwen3-1.7B. It runs on Hugging Face Jobs with NVIDIA CUDA, not on the
+Vulkan deployment profile, and has no tool, observation, proposal-schema, or
+Codegeist OS behavior requirement. No additional model families will be
+evaluated through this path.
 
-For each model, the smoke records training loss, the response to
+The stage records training loss, the response to
 `What is Codegeist?`, adapter size and digest, save and clean reload behavior,
 fixed-seed repeatability, immutable revisions, dependency lock, job identity,
-hardware, duration, and terminal status. The expected adapted answer is exactly
-`Codegeist is a coding agent.`.
+hardware, duration, and terminal status. The current expected adapted answer is
+exactly `Codegeist is a coding agent created by René Schmidt.`.
 
-Passing this smoke proves only that one record can be memorized through the
-selected LoRA pipeline. Results must not be included in production quality,
-safety, coding, generalization, integration, GGUF, quantization, or Vulkan
-scores.
+The result establishes the first approved model-identity record and the locked
+training path. It must not be included in production quality, safety, coding,
+generalization, integration, GGUF, quantization, or Vulkan scores. Those claims
+require later reviewed training stages and held-out evaluation.
+
+The completed Qwen3-1.7B training evidence is preserved in:
+
+- `docs/evidence/codegeist-training-qwen3-1.7b.md` for the detailed review
+  record.
+- `docs/evidence/codegeist-training-qwen3-1.7b.json` for structured Job, metric,
+  cost, provenance, artifact, verification, and known-gap data.
+
+These curated files contain no adapter bytes or model weights. Private raw
+artifacts remain under ignored `.artifacts/` and in `codegeist/jobs-artifacts`.
+The completed stage used one greedy baseline generation and one greedy
+post-reload generation. Repeatability remains an unsatisfied criterion and is
+recorded as a gap rather than inferred from exact match.
+
+The reviewed adapter is public at `codegeist/codegeist-llm`. A clean A10G reload
+matched the approved identity sentence after whitespace normalization. A later
+anonymous RTX A2000 reload retained the exact raw sentence while verifying every
+parameter and buffer on CUDA and every floating parameter in BF16. CPU inference
+is unsupported. This remains first-stage training evidence only.
 
 ## Categories
 

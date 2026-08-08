@@ -38,7 +38,9 @@ weights, private planning material, credentials, or secrets.
 
 ## Artifact Safety
 
-- Do not commit model or dataset artifacts to Git.
+- Do not commit model weights or generated, bulk, restricted, or downloaded
+  dataset artifacts to Git. Small reviewed project-authored records may be
+  committed as source fixtures when their provenance and license are explicit.
 - Prefer non-executable data formats and safe loaders. Treat pickle-based or
   plugin-capable formats as executable code.
 - Load upstream models from immutable revisions with remote code disabled.
@@ -82,6 +84,13 @@ analysis, poisoning review, and documented exclusions. Synthetic records retain
 the teacher, prompt, revision, sampling configuration, usage rights, and review
 status.
 
+The first Codegeist training stage has one reviewed identity record. Checks that
+cannot be meaningful at that size record deduplication and scenario splitting as
+not applicable and identify the deliberate train/evaluation overlap. The record
+still requires authorship, license, PII, secret, poisoning, and exclusion review.
+Later capability stages receive no exception: they require split-before-
+transformation and contamination analysis before training.
+
 ## Credentials And External Services
 
 - Keep registry, model-host, storage, and signing credentials outside Git and
@@ -93,15 +102,47 @@ status.
 
 Hugging Face training jobs run under the `codegeist` user namespace. `HF_TOKEN`
 is passed only through the Jobs secret mechanism. Jobs write intermediate
-checkpoints to non-public storage and may not automatically promote artifacts to
-public repositories. Public smoke datasets and adapters require a separate
+outputs, including checkpoints when enabled, to non-public storage and may not
+automatically promote artifacts to public repositories. Public training datasets
+and adapters require a separate
 license, provenance, PII, secret, integrity, reload, and evaluation gate.
 
-The project devcontainer installs the `hf` executable without credentials.
-`HF_TOKEN` may be injected at runtime through the ignored
-`.codegeist/.local.env` file or an equivalent local environment. It must not be
-used as a Docker build argument, persisted with Docker `ENV`, passed as a token
-value on a command line, or copied into an image layer or cache.
+Codegeist training synchronizes source and outputs through the explicitly private
+`codegeist/jobs-artifacts` bucket. Retrieved artifacts stay under the ignored
+local `.artifacts/` directory; model data, adapters, and generated result files
+must not be added to Git. A read-write local Jobs volume requires a separate
+post-job `hf buckets sync` to retrieve its remote contents.
+
+Sanitized, project-authored evidence derived from those results may be committed
+under `docs/evidence/` after source hashes, artifact hashes, secret absence, PII
+absence, licensing context, terminal status, and interpretation limits are
+reviewed. Curated evidence must not embed raw logs, private prompts, credentials,
+or artifact bytes.
+
+The reviewed first-stage Qwen adapter is public at
+`codegeist/codegeist-llm`. Its repository contains only the
+Safetensors adapter, revised PEFT metadata, a complete model card, 0BSD and
+upstream Apache-2.0 notices, sanitized evidence, and hash manifests. Raw Job
+outputs and logs remain private. Public loading pins both base and adapter Hub
+commits and works without a credential. The supported verifier requires CUDA
+BF16, rejects CPU fallback, and passes `token=False` to every Hub loader.
+
+Release `v0.2.1` deliberately publishes the creator attribution `René Schmidt`
+in its one authored training record and model card. The named creator explicitly
+selected that exact public spelling. No contact details, user data, private logs,
+or additional personal information are published.
+
+The project devcontainer installs the `hf` executable without credentials. The
+separate locked public-adapter inference environment is created on demand under
+the ignored project tree by `task setup`, not embedded in the image. The project
+Compose override requests one NVIDIA GPU from the host runtime; it does not
+bundle a driver or grant broader host access. The verifier explicitly disables
+Hub-token use for every public model and adapter load. `HF_TOKEN` may be injected
+at runtime through the ignored
+`.codegeist/.local.env` file or an equivalent local environment for authenticated
+CLI operations. It must not be used as a Docker build argument, persisted with
+Docker `ENV`, passed as a token value on a command line, or copied into an image
+layer or cache.
 
 The planned Gitea submodule uses a token-free HTTPS URL at
 `refs/codegeist-os/`. `GITEA_TOKEN` is supplied only through a credential
@@ -118,8 +159,8 @@ a normally trusted certificate.
 
 Public project-authored repository content uses the shared 0BSD license at
 `https://github.com/codegeist-ai/codegeist-ai/blob/main/LICENSE`; this repository
-does not duplicate that file. The same license applies to the authored
-one-record identity dataset and smoke adapters when published, subject to
+does not duplicate that file. The same license applies to authored Codegeist
+training records and adapters when published, subject to
 separate verification of every upstream model license, notice, acceptable-use
 term, and derivative right. The shared license does not relicense third-party
 model weights or dependencies.

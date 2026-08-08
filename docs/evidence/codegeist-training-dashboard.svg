@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1230" viewBox="0 0 1440 1230" role="img" aria-labelledby="dashboard-title dashboard-description">
+<title id="dashboard-title">Qwen3-1.7B Codegeist training evidence dashboard</title>
+<desc id="dashboard-description">Training, provenance, GPU verification, cost, loss curve, and interpretation limits for the first Codegeist training stage.</desc>
+<style>
+              .background { fill: #0b1020; }
+              .panel { fill: #121a2d; stroke: #2c3855; stroke-width: 1.5; }
+              .metric { fill: #141f35; stroke: #2c3855; stroke-width: 1.5; }
+              .node { fill: #172238; stroke: #3b4d70; stroke-width: 1.5; }
+              .node-accent { fill: #17302e; stroke: #45d6a2; stroke-width: 1.5; }
+              .display { fill: #f4f0e6; font: 700 34px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -1px; }
+              .section { fill: #f4f0e6; font: 700 18px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.8px; }
+              .eyebrow { fill: #6cb6ff; font: 700 12px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; }
+              .metric-value { fill: #f4f0e6; font: 700 24px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .metric-label { fill: #9da9bf; font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.7px; }
+              .body { fill: #c8d0df; font: 15px ui-sans-serif, system-ui, sans-serif; }
+              .current-response { fill: #45d6a2; font: 700 16px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .small { fill: #9da9bf; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .node-title { fill: #f4f0e6; font: 700 14px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .node-value { fill: #9da9bf; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .pass { fill: #45d6a2; font: 700 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .limit { fill: #ff9a91; font: 13px ui-sans-serif, system-ui, sans-serif; }
+              .grid { stroke: #27344f; stroke-width: 1; }
+              .axis { fill: #7f8ba3; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
+              .v2-line { fill: none; stroke: #ff7a6e; stroke-width: 3; }
+              .connector { stroke: #45d6a2; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+              .divider { stroke: #2c3855; stroke-width: 1; }
+            </style>
+<defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#45d6a2"/>
+              </marker>
+            </defs>
+<rect width="1440" height="1230" class="background"/>
+<text x="60" y="50" class="eyebrow" text-anchor="start">CODEGEIST / EVIDENCE RECORD</text>
+<text x="60" y="94" class="display" text-anchor="start">Qwen3-1.7B initial training</text>
+<rect x="1180" y="52" width="200" height="46" rx="23" class="node-accent"/>
+<text x="1280" y="81" class="pass" text-anchor="middle">PASSED / v0.2.1</text>
+<text x="60" y="122" class="current-response" text-anchor="start">CURRENT VERIFIED RESPONSE / Codegeist is a coding agent created by René Schmidt.</text>
+<rect x="60" y="150" width="244" height="122" rx="16" class="metric"/>
+<text x="80" y="179" class="metric-label" text-anchor="start">TRAIN JOB</text>
+<text x="80" y="220" class="metric-value" text-anchor="start">133 s</text>
+<text x="80" y="250" class="small" text-anchor="start">NVIDIA A10G</text>
+<rect x="324" y="150" width="244" height="122" rx="16" class="metric"/>
+<text x="344" y="179" class="metric-label" text-anchor="start">ADAPTER</text>
+<text x="344" y="220" class="metric-value" text-anchor="start">34.9 MB</text>
+<text x="344" y="250" class="small" text-anchor="start">Safetensors</text>
+<rect x="588" y="150" width="244" height="122" rx="16" class="metric"/>
+<text x="608" y="179" class="metric-label" text-anchor="start">GPU RELOAD</text>
+<text x="608" y="220" class="metric-value" text-anchor="start">10.726 s</text>
+<text x="608" y="250" class="small" text-anchor="start">RTX A2000</text>
+<rect x="852" y="150" width="244" height="122" rx="16" class="metric"/>
+<text x="872" y="179" class="metric-label" text-anchor="start">PEAK VRAM</text>
+<text x="872" y="220" class="metric-value" text-anchor="start">3.27 GiB</text>
+<text x="872" y="250" class="small" text-anchor="start">CUDA / BF16</text>
+<rect x="1116" y="150" width="244" height="122" rx="16" class="metric"/>
+<text x="1136" y="179" class="metric-label" text-anchor="start">TRAINING COST</text>
+<text x="1136" y="220" class="metric-value" text-anchor="start">$0.037-$0.050</text>
+<text x="1136" y="250" class="small" text-anchor="start">133 Job seconds</text>
+<rect x="60" y="304" width="1320" height="218" rx="16" class="panel"/>
+<text x="86" y="339" class="section" text-anchor="start">PROVENANCE / IMMUTABLE HANDOFFS</text>
+<path d="M 306 421 L 336 421" class="connector"/>
+<path d="M 570 421 L 600 421" class="connector"/>
+<path d="M 834 421 L 864 421" class="connector"/>
+<path d="M 1098 421 L 1128 421" class="connector"/>
+<rect x="86" y="373" width="220" height="96" rx="12" class="node"/>
+<text x="102" y="398" class="metric-label" text-anchor="start">EXECUTED SOURCE</text>
+<text x="102" y="426" class="node-title" text-anchor="start">train.py</text>
+<text x="102" y="450" class="node-value" text-anchor="start">423d3ad9fbe3...</text>
+<rect x="350" y="373" width="220" height="96" rx="12" class="node"/>
+<text x="366" y="398" class="metric-label" text-anchor="start">HUGGING FACE JOB</text>
+<text x="366" y="426" class="node-title" text-anchor="start">6a76c9983e1f34a7e32be58c</text>
+<text x="366" y="450" class="node-value" text-anchor="start">COMPLETED</text>
+<rect x="614" y="373" width="220" height="96" rx="12" class="node"/>
+<text x="630" y="398" class="metric-label" text-anchor="start">PRIVATE ADAPTER</text>
+<text x="630" y="426" class="node-title" text-anchor="start">Safetensors</text>
+<text x="630" y="450" class="node-value" text-anchor="start">4cc89bd25712...</text>
+<rect x="878" y="373" width="220" height="96" rx="12" class="node"/>
+<text x="894" y="398" class="metric-label" text-anchor="start">PUBLIC RELEASE</text>
+<text x="894" y="426" class="node-title" text-anchor="start">codegeist/codegeist-llm</text>
+<text x="894" y="450" class="node-value" text-anchor="start">v0.2.1</text>
+<rect x="1142" y="373" width="220" height="96" rx="12" class="node-accent"/>
+<text x="1158" y="398" class="metric-label" text-anchor="start">GPU EVIDENCE</text>
+<text x="1158" y="426" class="node-title" text-anchor="start">NVIDIA RTX A2000 12GB</text>
+<text x="1158" y="450" class="node-value" text-anchor="start">af0092e72bd3...</text>
+<text x="86" y="497" class="small" text-anchor="start">source bytes</text>
+<text x="365" y="497" class="small" text-anchor="start">paid compute</text>
+<text x="629" y="497" class="small" text-anchor="start">content digest</text>
+<text x="893" y="497" class="small" text-anchor="start">commit + tag</text>
+<text x="1157" y="497" class="small" text-anchor="start">anonymous reload</text>
+<rect x="60" y="554" width="820" height="330" rx="16" class="panel"/>
+<text x="86" y="589" class="section" text-anchor="start">TRAINING LOSS / 20 STEPS</text>
+<text x="728" y="589" class="small" text-anchor="start">v0.2.1</text>
+<line x1="789" y1="585" x2="821" y2="585" class="v2-line"/>
+<line x1="104" y1="829.00" x2="840" y2="829.00" class="grid"/>
+<text x="90" y="833.0" class="axis" text-anchor="end">0</text>
+<line x1="104" y1="777.75" x2="840" y2="777.75" class="grid"/>
+<text x="90" y="781.75" class="axis" text-anchor="end">2</text>
+<line x1="104" y1="726.50" x2="840" y2="726.50" class="grid"/>
+<text x="90" y="730.5" class="axis" text-anchor="end">4</text>
+<line x1="104" y1="675.25" x2="840" y2="675.25" class="grid"/>
+<text x="90" y="679.25" class="axis" text-anchor="end">6</text>
+<line x1="104" y1="624.00" x2="840" y2="624.00" class="grid"/>
+<text x="90" y="628.0" class="axis" text-anchor="end">8</text>
+<text x="104.0" y="851" class="axis" text-anchor="middle">1</text>
+<text x="258.9473684210526" y="851" class="axis" text-anchor="middle">5</text>
+<text x="452.6315789473684" y="851" class="axis" text-anchor="middle">10</text>
+<text x="646.3157894736842" y="851" class="axis" text-anchor="middle">15</text>
+<text x="840.0" y="851" class="axis" text-anchor="middle">20</text>
+<path d="M 104.00,631.10 L 142.74,642.60 L 181.47,672.43 L 220.21,698.77 L 258.95,722.73 L 297.68,744.54 L 336.42,760.25 L 375.16,770.19 L 413.89,777.16 L 452.63,782.95 L 491.37,789.38 L 530.11,795.20 L 568.84,800.68 L 607.58,804.94 L 646.32,808.27 L 685.05,811.48 L 723.79,815.97 L 762.53,820.24 L 801.26,824.08 L 840.00,828.53" class="v2-line"/>
+<text x="104" y="863" class="small" text-anchor="start">Aggregate loss  2.4946</text>
+<rect x="910" y="554" width="470" height="330" rx="16" class="panel"/>
+<text x="936" y="589" class="section" text-anchor="start">EVIDENCE BOUNDARY</text>
+<text x="936" y="627" class="pass" text-anchor="start">PASS</text>
+<text x="995" y="627" class="body" text-anchor="start">Public manifest</text>
+<text x="936" y="658" class="pass" text-anchor="start">PASS</text>
+<text x="995" y="658" class="body" text-anchor="start">Anonymous Hub access</text>
+<text x="936" y="689" class="pass" text-anchor="start">PASS</text>
+<text x="995" y="689" class="body" text-anchor="start">Parameters + buffers on CUDA</text>
+<text x="936" y="720" class="pass" text-anchor="start">PASS</text>
+<text x="995" y="720" class="body" text-anchor="start">Floating parameters in BF16</text>
+<line x1="936" y1="762" x2="1354" y2="762" class="divider"/>
+<text x="936" y="790" class="metric-label" text-anchor="start">NOT DEMONSTRATED</text>
+<text x="936" y="820" class="limit" text-anchor="start">- Coding ability</text>
+<text x="1146" y="820" class="limit" text-anchor="start">- Generalization</text>
+<text x="936" y="851" class="limit" text-anchor="start">- Safe tool use</text>
+<text x="1146" y="851" class="limit" text-anchor="start">- Vulkan / production quality</text>
+<rect x="60" y="916" width="1320" height="242" rx="16" class="panel"/>
+<text x="86" y="951" class="section" text-anchor="start">CURRENT VERIFIED RECORD</text>
+<rect x="86" y="978" width="1268" height="142" rx="12" class="node-accent"/>
+<text x="108" y="1008" class="eyebrow" text-anchor="start">ACTIVE / v0.2.1</text>
+<text x="108" y="1040" class="body">
+<tspan x="108" dy="0">Codegeist is a coding agent created by René Schmidt.</tspan>
+</text>
+<text x="108" y="1084" class="small" text-anchor="start">Job 6a76c9983e1f34a7e32be58c  /  133 s  /  loss 2.4946</text>
+<text x="108" y="1107" class="small" text-anchor="start">Adapter 4cc89bd25712...</text>
+<text x="60" y="1197" class="eyebrow" text-anchor="start">GENERATED FROM CURATED JSON / NO WEIGHTS / NO RAW LOGS / NO CREDENTIALS</text>
+<text x="1380" y="1197" class="small" text-anchor="end">2026-08-08</text>
+</svg>

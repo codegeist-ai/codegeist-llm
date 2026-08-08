@@ -2,117 +2,123 @@
 
 ## Current Goal
 
-- Build the compact, local, unprivileged inference worker and model pipeline
-  consumed by `codegeist-os`.
+- Build the compact local inference worker and model pipeline consumed by
+  `codegeist-os`.
 - Deliver a reproducible, signed native Codegeist LLM package for a strictly
   read-only diagnosis-and-planning MVP.
-- Validate the training infrastructure independently with a non-production
-  one-record Unsloth LoRA smoke test on Hugging Face Jobs.
+- Continue Codegeist training from a controlled, provenance-complete first
+  Qwen3-1.7B stage.
+
+## Current Decisions
+
+- Qwen3-1.7B is the sole base-model candidate. Do not evaluate additional model
+  families.
+- The first approved training record establishes
+  `Codegeist is a coding agent created by René Schmidt.` as model identity.
+- This sentence starts the cumulative reviewed training dataset. Future adapters
+  restart from the pinned base model with this record plus additional reviewed
+  data; never continue training from the published first-stage adapter.
+- Later capability training requires unchanged baselines, reviewed records, a
+  held-out evaluation split, and all quality, safety, provenance, hardware, and
+  release gates.
+- The first deployment profile is Linux x86-64 with a discrete Vulkan device,
+  at least 8 GiB dedicated VRAM, full model and inference-state GPU offload, an
+  8192-token context, and no CPU-only inference fallback.
+- Codegeist LLM owns model training, evaluation, conversion, the internal worker,
+  and signed release-bundle generation. Codegeist OS owns installation, trust,
+  isolation, observations, tools, policy, permissions, approvals, audit, and
+  every system action.
+- The first MVP remains strictly read-only with no shell, public HTTP service,
+  system-changing action, privileged executor, or frontier-model network path.
 
 ## Current Repository State
 
-- The repository is initialized on `main` as a documentation-first bootstrap.
-- `.devcontainer` and `.opencode` track the shared Codegeist kits on `release`.
-- Gitea is the private primary host and GitHub is the public Git-ref mirror.
-- Public project-authored content uses the shared 0BSD license published by
-  `codegeist-ai/codegeist-ai`; this repository does not duplicate the license
-  file. The same license applies to authored smoke datasets and adapters when
-  published, subject to separate upstream and derivative-rights review.
-- `docs/architecture.md` is the normative product and repository-boundary
-  definition; `docs/technology-stack.md` is the normative framework baseline.
-- No model weights, datasets, generated artifacts, training code, or inference
-  implementation are present.
-- `docs/training.md` defines a non-production identity smoke that teaches only
-  `Codegeist is a coding agent.` to Qwen3-1.7B, SmolLM3-3B, and Qwen3.5-2B
-  through separate BF16 LoRA adapters.
-- The smoke uses Unsloth over the pinned Transformers, Datasets, TRL, and PEFT
-  stack. It runs each model separately under the Hugging Face `codegeist`
-  namespace on `a10g-small` with a 30-minute timeout.
-- The public Hugging Face user `codegeist` is verified. The user supplies
-  `HF_TOKEN` at runtime; its value is not recorded or placed in an image.
-- `.codegeist/Dockerfile` now pins `hf==1.26.1` through `uv tool install`. The
-  merged Dockerfile has been regenerated and passes `docker build --check`; the
-  image still needs to be rebuilt before `hf version`, `hf auth whoami`, and
-  `hf jobs hardware` can be verified in the container.
-- The first implementation will be an isolated `jobs/identity-smoke/` UV
-  project mounted into `hf jobs run` and executed with `uv run --frozen`.
-  Inspection showed that the local-script UV Jobs path does not automatically
-  carry an adjacent lockfile.
-- Qwen3-1.7B is pinned for the first paid run at
+- `docs/architecture.md` is the normative product and repository boundary;
+  `docs/technology-stack.md` is the normative framework baseline.
+- `docs/training.md` defines Codegeist training and later-stage requirements.
+- `jobs/training/` contains the locked training source, upstream model manifest,
+  framework probe, anonymous published-adapter verifier, evidence generator, and
+  29 weightless contracts.
+- The training lock has 106 packages. The separate 52-package inference lock is
+  installed on demand under ignored `jobs/training/inference/.venv`.
+- Both `uv.lock` files are mandatory tracked provenance inputs for frozen Jobs,
+  tests, and inference. Update them only through an intentional compatibility
+  change; never commit `.venv/` directories or package caches.
+- `Taskfile.yml` provides `setup`, `test`, `evidence`, `infer`, and `all`.
+  After the verifier simplification, `task test` passed all 29 contracts and
+  `task infer` passed with Python 3.12.12, PyTorch `2.6.0+cu124`, CUDA 12.4,
+  full CUDA/BF16 placement, and the exact approved response on an NVIDIA RTX
+  A2000 12GB.
+- `infer.py` fixes model IDs, immutable revisions, prompt, expected response, and
+  adapter digest in source. Its only CLI input is an optional exclusive-create
+  result path below `/outputs`. It assumes the GPU-enabled project devcontainer
+  and does not duplicate CUDA/BF16 availability checks; post-load model-state
+  validation remains mandatory.
+- `.codegeist/Dockerfile` pins only `hf==1.26.1` and embeds no optional inference
+  packages or credentials. `.codegeist/compose.local.yml` requests one NVIDIA
+  GPU from the host runtime.
+- Private current-stage artifacts live under ignored
+  `.artifacts/training/qwen3-1.7b/` and in the private
+  `codegeist/jobs-artifacts` bucket. Older local run evidence has been removed.
+- Curated evidence is generated from
+  `docs/evidence/codegeist-training-qwen3-1.7b.json` into the training overview,
+  dashboard, and Mermaid provenance files. It contains no weights, private logs,
+  credentials, or private data.
+- No model weights, generated or bulk dataset artifacts, generated GGUF files,
+  release bundles, or production worker source are tracked in Git.
+
+## First Training Stage
+
+- Base model: `Qwen/Qwen3-1.7B` at
   `70d244cc86ccca08cf5af4e1e306ecf908b1ad5e`.
-- Qwen3-1.7B runs first. Qwen3.5 requires Transformers v5 and language-only LoRA
-  targets. SmolLM3 requires an Unsloth compatibility probe before paid training.
-- The smoke has no tools, observations, proposal schema, operating-system
-  action, private data, or dependency on Codegeist OS. It demonstrates pipeline
-  operation and one-record memorization only.
-- `refs/codegeist-os/` is the selected future path for the first-party Codegeist
-  OS development and contract-reference submodule. T002 is specified and uses
-  the narrow command-local Gitea TLS exception in
-  `.oc_local/rules/gitea-tls.md`.
-- `GITEA_TOKEN` is the selected authentication input and must be injected at
-  runtime through a credential mechanism and must never be written into
-  repository URLs or files.
-- This repository owns worker source, model selection and adaptation, conversion,
-  evaluation, build, and signed release-bundle generation. Codegeist OS owns
-  bundle trust and installation, isolation, observations, tools, policy,
-  permissions, approvals, audit enforcement, and system actions.
-- The first MVP is strictly read-only and has no shell, public HTTP service,
-  system-changing action, privileged executor, or frontier-model network path.
-- The first deployment profile is Linux x86-64 with a discrete hardware Vulkan
-  device, at least 8 GiB dedicated VRAM, sufficient available device-local
-  memory, complete model and inference-state GPU offload, an 8192-token context,
-  and no CPU-only inference fallback.
-- The downloadable artifact will be a signed release bundle containing an
-  internal inference worker, model, runtime libraries, integrity metadata, and
-  release evidence. The worker is supervised by Codegeist OS and has no shell,
-  direct system-tool, general-chat, HTTP, or policy-enforcement interface.
-- The native baseline is C++20, `llama.cpp`, GGUF, Vulkan, CMake, Ninja, CTest,
-  and a thin Taskfile. The adaptation baseline is Python 3.12, `uv`, PyTorch,
-  Transformers, Datasets, PEFT, TRL, Accelerate, and Safetensors.
-- Releases use reproducible `tar.zst`, SHA-256, Minisign, SPDX 2.3 SBOMs, and
-  in-toto/SLSA provenance.
-- No production base model, production dataset, final quantization, exact
-  dependency compatibility set, or Vulkan compatibility matrix is selected yet.
+- Training Job: `6a76c9983e1f34a7e32be58c` on NVIDIA A10G.
+- Configuration: BF16 LoRA, rank 8, alpha 8, 20 steps, completion-only loss,
+  seed 3407.
+- Adapter artifact commit:
+  `a9504a0ee1150ea05f88ff725758404fcb604a32`.
+- Adapter weight SHA-256:
+  `4cc89bd25712ff4f532c1eaaa5c8086dc344a05b0778d2a304b8ff7a2efaf4a7`.
+- Public repository: `codegeist/codegeist-llm`.
+- Current metadata release: `v0.2.1` at
+  `c039e9013856f9648050ba5ccadb2909d079a60e`.
+- `v0.2.1` is metadata-only. An anonymous full manifest check and RTX A2000
+  reload passed while retaining the immutable adapter hash and exact response.
+- The retained anonymous GPU result SHA-256 is
+  `af0092e72bd347d5a4dd4bfbb579bae0402c51ead31959d33dd5647d4e34a430`.
+- The first stage establishes model identity and the training path. It is not
+  evidence of coding ability, reasoning, tool use, safety, generalization, GGUF,
+  Vulkan, Codegeist OS integration, or release quality.
 
 ## Durable Boundaries
 
 - Treat every committed ref as public.
-- Keep model and dataset artifacts, credentials, private prompts, and restricted
-  material outside Git.
-- Require evidence for license rights, provenance, integrity, hardware fit, and
-  evaluation quality before selecting or distributing a model.
-- Treat model and worker outputs as untrusted proposals; Codegeist OS remains
-  authoritative for validation and every security-relevant decision.
-- Keep identity-smoke checkpoints non-public and promote only reviewed adapters
-  through a separate Hub publication gate. Pass `HF_TOKEN` only through the
-  Hugging Face Jobs secret mechanism.
-- Keep `HF_TOKEN` out of Docker build arguments, Dockerfile `ENV`, image layers,
-  command-line token values, Git, job labels, cards, and result manifests.
-- Do not use the identity smoke as model-selection, coding, tool-use,
-  generalization, GGUF, Vulkan, safety, or production-quality evidence.
-- For HTTPS Git operations whose remote host is exactly `git.codegeist.ai`, the
-  user permits only the per-command URL-scoped setting
-  `-c http.https://git.codegeist.ai/.sslVerify=false`. Never persist, globalize,
-  or apply it to another host.
+- Keep weights, generated datasets, credentials, private prompts, logs, and
+  restricted material outside Git.
+- Require immutable revisions and reviewable license, provenance, integrity,
+  hardware, and evaluation evidence for every adopted artifact.
+- Pass `HF_TOKEN` only through the Hugging Face Jobs secret mechanism. Keep it
+  out of Docker arguments, images, commands, Git, labels, cards, and manifests.
+- Public adapter verification must remain token-free, revision-pinned, strict
+  CUDA/BF16, fully offloaded, and without CPU fallback.
+- Treat model and worker outputs as untrusted proposals. Codegeist OS remains
+  authoritative for every security-relevant decision.
+- For HTTPS Git operations against exactly `git.codegeist.ai`, use only the
+  approved per-command URL-scoped TLS exception from
+  `.oc_local/rules/gitea-tls.md`.
 
 ## Open Next Steps
 
 - Complete T002 by creating or verifying `codegeist/codegeist-os` on Gitea and
-  adding the clean HTTPS submodule at `refs/codegeist-os/` through the approved
-  command-local TLS exception.
-- Implement T003 with locked Unsloth and Hugging Face dependencies, the single
-  completion-only identity record, preflight tests, the pinned UV job image, and
-  the sequential three-job comparison.
-- Rebuild the devcontainer and verify the pinned `hf` CLI and runtime identity as
-  `codegeist` before creating the isolated training project or launching a paid
-  job.
-- Implement the T001 Vulkan inference spike with pinned SmolLM3-3B and
-  Qwen3-1.7B inputs, project-controlled GGUF conversion, constrained JSON, and
-  full-offload verification.
+  adding it at `refs/codegeist-os/` through the approved TLS exception.
+- Implement the T001 Vulkan inference spike for pinned Qwen3-1.7B with
+  project-controlled GGUF conversion, constrained JSON, and full-offload
+  verification.
 - Specify representative German and English read-only Codegeist OS workloads
   and the first proposal schema.
-- Select the model, quantization, exact llama.cpp revision, CPU/glibc/Vulkan
-  compatibility matrix, IPC transport, worker defense-in-depth validator, and
-  authoritative Codegeist OS validation contract from measured evidence.
-- Define release thresholds, the package manifest, signing-key process, and the
-  versioned Codegeist OS integration contract.
+- Specify the next cumulative reviewed training dataset and held-out evaluation
+  split before extending `train.py`.
+- Select quantization, exact `llama.cpp` revision, compatibility matrix, IPC,
+  validator, release thresholds, package manifest, and signing-key process from
+  measured evidence.
+- Rotate `HF_TOKEN` and `GITEA_TOKEN` because an earlier unsanitized Compose
+  inspection expanded both local values into transient tool output.

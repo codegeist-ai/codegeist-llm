@@ -18,19 +18,20 @@ choosing from reputation or benchmark rank alone.
 - Reject models that require unreviewed remote code or cannot be converted,
   evaluated, and redistributed through the selected toolchain.
 
-The first spike compares SmolLM3-3B and Qwen3-1.7B. Qwen3.5-2B remains a later
-capability challenger because its newer hybrid and multimodal architecture adds
-conversion and Vulkan risk. This shortlist is not a model selection.
+The first spike evaluates Qwen3-1.7B as the sole candidate. The project will not
+evaluate additional model families. This scope decision is not model-selection
+evidence: Qwen3-1.7B must still pass the complete quality, security, provenance,
+GGUF, Vulkan, and release gates before it can be selected.
 
-All three candidates also participate in the one-record LoRA infrastructure
-smoke defined by `docs/training.md`. That smoke deliberately memorizes
-`Codegeist is a coding agent.` and cannot provide model-selection, coding,
-generalization, safety, tool-use, GGUF, or Vulkan evidence. It does not replace
-the unchanged production baselines.
+Qwen3-1.7B is the base for the first Codegeist training stage defined by
+`docs/training.md`. That stage establishes
+`Codegeist is a coding agent created by René Schmidt.` as model identity but
+cannot provide model-selection, coding, generalization, safety, tool-use, GGUF,
+or Vulkan evidence. It does not replace unchanged production baselines.
 
 ## Licensing
 
-Public project-authored code and planned authored smoke artifacts use the shared
+Public project-authored code and authored training artifacts use the shared
 0BSD license from `codegeist-ai/codegeist-ai`. That project choice does not
 license third-party inputs or prove that a derived model artifact can use the
 same license.
@@ -100,9 +101,9 @@ same license.
 
 ## Required Decision Record
 
-A selection record must identify the compared candidates, evidence sources,
-hardware profiles, evaluation revisions, license review, provenance gaps,
-accepted risks, and the reason for the final choice. Selection is deferred until
-that record can be completed. It must also identify the exact tokenizer, chat
-template, runtime, GGUF conversion, quantization, prompt contract, and Vulkan
-compatibility evidence used for the decision.
+A selection record must identify the evaluated candidate, explicit comparison
+scope, evidence sources, hardware profiles, evaluation revisions, license
+review, provenance gaps, accepted risks, and the reason for the final choice.
+Selection is deferred until that record can be completed. It must also identify
+the exact tokenizer, chat template, runtime, GGUF conversion, quantization,
+prompt contract, and Vulkan compatibility evidence used for the decision.

@@ -27,7 +27,7 @@ user approvals, audit enforcement, and every privileged operation.
 The first MVP is strictly read-only. It may request typed diagnostic tools and
 return diagnoses, abstentions, escalations, or non-executable plans. It cannot
 change system state. No tool catalog or Codegeist OS proposal schema is
-implemented yet, and the identity training smoke does not introduce either one.
+implemented yet, and the first training stage does not introduce either one.
 
 ## Selected Baseline
 
@@ -40,37 +40,54 @@ implemented yet, and the identity training smoke does not introduce either one.
 - **Native build:** CMake, `CMakePresets.json`, Ninja, and CTest. A Taskfile is a
   thin workflow interface and does not duplicate build configuration.
 - **Model adaptation:** Python 3.12, PyTorch, Hugging Face Transformers,
-  Datasets, PEFT, TRL, Accelerate, Safetensors, and Unsloth for the first
-  training-pipeline smoke test.
+  Datasets, PEFT, TRL, Accelerate, Safetensors, and Unsloth for Codegeist
+  training.
 - **Cloud orchestration:** Hugging Face CLI 1.26.1 installed by the
   project-specific devcontainer extension, with Jobs running under the
   `codegeist` user namespace.
+- **Published-adapter reload:** a separate 52-package Python 3.12 lock with CUDA
+  12.4 PyTorch and direct PEFT, installed on demand through `task setup` for
+  strict GPU-only verification of the published Qwen adapter.
 - **Data:** reviewable JSONL sources and typed Parquet shards generated under a
   pinned logical-reproducibility contract with manifests and checksums.
 - **Distribution:** reproducible `tar.zst`, SHA-256 manifests, Minisign,
   SPDX 2.3 SBOMs, and in-toto/SLSA provenance.
 
-Exact dependency revisions must be pinned by implementation work. No production
-base model, production dataset, final quantization, or GPU/driver compatibility
-matrix has been selected yet.
+Codegeist training has an exact locked compatibility set. No production base
+model, complete capability dataset, final quantization, or GPU/driver
+compatibility matrix has been selected yet.
 
-## Training Pipeline Smoke
+## Codegeist Training
 
-The first training exercise is intentionally not production adaptation. It uses
-Unsloth BF16 LoRA on Hugging Face Jobs to teach Qwen3-1.7B, SmolLM3-3B, and
-Qwen3.5-2B the single answer `Codegeist is a coding agent.`. It validates model
-download, training, adapter persistence, reload, evaluation, and gated Hub
-publication only. It does not test coding ability, tools, Codegeist OS
-integration, or generalization.
+The first Codegeist training stage uses Unsloth BF16 LoRA on Hugging Face Jobs
+to establish `Codegeist is a coding agent created by René Schmidt.` as the model
+identity. This sentence starts the cumulative reviewed training dataset. Later
+adapters restart from the pinned base model with this record plus additional
+reviewed behavior data; the current adapter is not used as a checkpoint.
 
-Jobs run one model at a time under the `codegeist` namespace on the
-`a10g-small` flavor with a 30-minute timeout. The full contract is in
+The first stage validates model download, training, adapter persistence, reload,
+evaluation, and gated Hub publication. Coding ability, tools, Codegeist OS
+integration, safety, and generalization require later training and evaluation.
+No additional base-model families are planned.
+
+Jobs run under the `codegeist` namespace on the `a10g-small` flavor with a
+30-minute timeout. The full contract is in
 `docs/training.md` and tracked by task T003.
+
+The current reviewed adapter is public at
+[`codegeist/codegeist-llm`](https://huggingface.co/codegeist/codegeist-llm) as
+`v0.2.1`. The A10G training run saved, hashed, and clean-reloaded the adapter
+with the approved response `Codegeist is a coding agent created by René
+Schmidt.` A later token-free reload from immutable Hub commits repeated the exact
+raw response on an NVIDIA RTX A2000 12GB, with every parameter and buffer on
+CUDA, every floating parameter in BF16, and 3,511,419,904 bytes of peak allocated
+CUDA memory. CPU inference is unsupported.
 
 ## Repository Rules
 
-- No model weights, datasets, generated GGUF files, release bundles, or access
-  tokens belong in Git.
+- No model weights, generated or bulk dataset artifacts, generated GGUF files,
+  release bundles, or access tokens belong in Git. Small reviewed
+  project-authored source records used as code fixtures may be tracked.
 - Source-code, model-weight, dataset, derivative, and redistribution licenses
   must be evaluated separately before any artifact is adopted or published.
 - Every model, dataset, tool, and transformation must be tied to immutable
@@ -86,12 +103,14 @@ Jobs run one model at a time under the `codegeist` namespace on the
   roles.
 - `docs/model-selection.md` defines the evidence required before choosing a base
   model.
-- `docs/training.md` defines the selected adaptation strategy and identity
-  pipeline smoke test.
+- `docs/training.md` defines the selected Codegeist training strategy and first
+  completed stage.
 - `docs/evaluation.md` defines the evaluation contract, metrics, hardware
   profile, and evidence requirements.
 - `docs/security.md` defines provenance, artifact, credential, and supply-chain
   requirements.
+- `docs/evidence/` contains curated experiment reports and machine-readable
+  evidence without model weights, adapters, raw logs, or credentials.
 - `docs/tasks/` contains non-normative research and implementation tasks.
 - `docs/memory-bank/chat.md` records compact current project state.
 
@@ -112,9 +131,25 @@ internal Gitea host follow the narrow command-local exception in
 `.oc_local/rules/gitea-tls.md`.
 
 `.codegeist/Dockerfile` extends the shared devcontainer image with the pinned
-Hugging Face CLI. `HF_TOKEN` is a runtime-only input supplied through the
-ignored `.codegeist/.local.env` file or an equivalent local environment; it is
-never part of the image build or Git history.
+Hugging Face CLI only. `.codegeist/compose.local.yml` requests one NVIDIA GPU;
+the host must provide its NVIDIA driver and NVIDIA Container Toolkit before the
+devcontainer is created. The optional 52-package inference environment is not
+part of the image. Install it immediately before use and run the verifier with:
+
+```bash
+task infer
+```
+
+`task infer` depends on `task setup`, which creates the ignored locked environment
+under `jobs/training/inference/.venv`. The verifier loads the public
+immutable Qwen adapter, checks that all model parameters and buffers are on
+CUDA, checks that all floating parameters are BF16, and rejects CPU fallback.
+Use `task --list` for the complete session-independent workflow.
+
+`HF_TOKEN` remains a runtime-only input for authenticated CLI and Jobs
+operations, supplied through the ignored `.codegeist/.local.env` file or an
+equivalent local environment. It is never part of the image build or Git
+history, and the public adapter verifier explicitly loads without a token.
 
 ## Hosting
 
@@ -129,6 +164,6 @@ This repository does not duplicate a local license file. When published through
 Codegeist AI, project-authored work uses the shared
 [0BSD license](https://github.com/codegeist-ai/codegeist-ai/blob/main/LICENSE)
 from `codegeist-ai/codegeist-ai`. The project targets the same license for its
-authored identity dataset and LoRA adapters, but each upstream model, dataset
+authored training dataset and LoRA adapters, but each upstream model, dataset
 input, dependency, notice, acceptable-use term, and derivative right still
 requires separate review before use or redistribution.

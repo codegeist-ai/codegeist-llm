@@ -1,0 +1,24 @@
+# compose.local.yml - require one NVIDIA GPU for the project devcontainer
+#
+# Why this exists:
+# - GPU access is a Docker runtime concern and cannot be enabled by a Dockerfile.
+# - The shared devcontainer stays generic; initialize.sh copies this project
+#   override to `.devcontainer/compose.user.gen.yml`.
+#
+# Host requirements:
+# - NVIDIA driver, Docker Engine, and NVIDIA Container Toolkit.
+#
+# Related files:
+# - `Taskfile.yml` installs the locked CUDA inference environment on demand.
+# - `jobs/training/infer.py` implements the strict GPU verifier.
+services:
+  workspace:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility

@@ -35,10 +35,9 @@ constraints without evidence and an explicit architecture update:
   Ninja, CTest, Taskfile, Python 3.12, PyTorch, the Hugging Face adaptation
   stack, reproducible `tar.zst`, Minisign, SPDX, and in-toto/SLSA provenance.
 
-The non-production one-record identity smoke tracked by T003 is an
-infrastructure exception, not a production adaptation step or model-selection
-input. It may run independently without changing this task's baseline-first
-contract.
+The first Codegeist training stage tracked by T003 establishes model identity
+and the locked adaptation path. It is not capability or model-selection evidence
+and does not change this task's unchanged-baseline contract.
 
 ## Initial Evidence
 
@@ -46,9 +45,7 @@ These are discovery sources, not immutable selection records. Every adopted
 dependency must later be pinned to an exact revision with checksums and license
 evidence.
 
-- [SmolLM3-3B model card](https://huggingface.co/HuggingFaceTB/SmolLM3-3B)
 - [Qwen3-1.7B model card](https://huggingface.co/Qwen/Qwen3-1.7B)
-- [Qwen3.5-2B model card](https://huggingface.co/Qwen/Qwen3.5-2B)
 - [`llama.cpp` build documentation](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md)
 - [`llama.cpp` grammar documentation](https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md)
 - [Hugging Face TRL documentation](https://huggingface.co/docs/trl/index)
@@ -60,8 +57,8 @@ evidence.
 ## Scope
 
 - Define representative German and English read-only Codegeist OS workloads.
-- Implement a Vulkan inference spike for pinned SmolLM3-3B and Qwen3-1.7B
-  revisions without model adaptation.
+- Implement a Vulkan inference spike for the pinned Qwen3-1.7B revision without
+  model adaptation. Do not add comparison runs for other model families.
 - Produce project-controlled GGUF variants through a pinned conversion and
   quantization toolchain.
 - Prove complete model, graph, KV or recurrent state, and execution-buffer
@@ -85,9 +82,9 @@ evidence.
 
 ## Non-Goals
 
-- Pretrain a foundation model or begin production adaptation before the baseline
-  failure analysis exists. The separate T003 identity smoke does not count as
-  production adaptation.
+- Pretrain a foundation model or begin capability adaptation before the baseline
+  failure analysis exists. The separate T003 identity stage does not count as
+  capability evidence.
 - Implement system-changing actions, policy enforcement, permissions,
   capability tokens, a privileged executor, or protected OS audit storage.
 - Add a general chat, shell, script, public HTTP, or arbitrary tool interface.
@@ -101,10 +98,9 @@ evidence.
 
 - Representative workloads identify required observations, expected outcome,
   allowed evidence references, and failure behavior.
-- SmolLM3-3B and Qwen3-1.7B are evaluated from immutable official revisions with
-  the same scenarios, proposal semantics, budgets, quantization set, and
-  hardware contract while preserving each model's pinned official chat
-  template.
+- Qwen3-1.7B is evaluated from an immutable official revision with the defined
+  scenarios, proposal semantics, budgets, quantization set, hardware contract,
+  and pinned official chat template.
 - Every run pins and records its candidate `llama.cpp` commit before execution;
   the final runtime commit is selected from the measured results.
 - The spike rejects missing Vulkan, software Vulkan, UMA or integrated devices,
@@ -130,8 +126,9 @@ evidence.
 - A responsibility matrix identifies the authoritative Codegeist OS component
   for every security-relevant decision.
 - The selected model record covers license, provenance, hardware fit, quality,
-  safety, maintenance, accepted risks, and rejected candidates, and satisfies
-  the complete decision-record contract in `docs/model-selection.md`.
+  safety, maintenance, accepted risks, and the explicit single-candidate scope,
+  and satisfies the complete decision-record contract in
+  `docs/model-selection.md`.
 - The worker embeds the pinned native `llama.cpp` API through C++20 targets built
   by CMake presets and Ninja; `llama-cli`, `llama-server`, and a second source of
   Taskfile build flags are not accepted worker implementations.
@@ -209,7 +206,7 @@ evidence.
 
 ## Open Questions
 
-- Which base model and exact revision pass the first spike?
+- Does the pinned Qwen3-1.7B revision pass every gate in the first spike?
 - Which GGUF quantization and KV-cache representation preserve required
   behavior within the 8 GiB profile?
 - Which CPU ISA, glibc, Vulkan version, extensions, GPUs, and drivers define the

@@ -1,0 +1,35 @@
+[project]
+name = "codegeist-training"
+version = "0.1.0"
+description = "Reproducible first-stage Codegeist LoRA training"
+requires-python = "==3.12.*"
+dependencies = [
+  "accelerate==1.14.0",
+  "datasets==4.3.0",
+  "huggingface-hub==1.26.1",
+  "peft==0.20.0",
+  "safetensors==0.8.0",
+  "torch==2.6.0",
+  "torchao==0.13.0",
+  "torchvision==0.21.0",
+  "transformers==5.5.0",
+  "trl==0.24.0",
+  "unsloth[cu124-torch260]==2026.8.7",
+  "unsloth-zoo==2026.8.5",
+  "xformers==0.0.29.post3",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==9.1.1",
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.uv]
+environments = [
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+package = false

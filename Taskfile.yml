@@ -1,0 +1,85 @@
+version: '3'
+
+# Taskfile.yml - reproducible entrypoints for Codegeist training
+#
+# Why this exists:
+# - Keeps the devcontainer image free of the optional 52-package inference
+#   environment while making setup and execution repeatable outside one session.
+# - Delegates all behavior to the locked UV projects and existing Python
+#   entrypoints; package pins and inference logic remain in their source files.
+#
+# Side effects:
+# - `setup` creates the ignored `jobs/training/inference/.venv` on demand.
+# - `infer` downloads the pinned public model and adapter on first execution.
+# - `evidence` rewrites generated review artifacts under `docs/evidence/`.
+#
+# Runtime contract:
+# - `infer` runs only in the GPU-enabled project devcontainer configured by
+#   `.codegeist/compose.local.yml`; `infer.py` validates loaded model placement
+#   and dtype instead of repeating CUDA/BF16 environment availability checks.
+
+vars:
+  TRAINING_PROJECT: '{{.ROOT_DIR}}/jobs/training'
+  INFERENCE_PROJECT: '{{.ROOT_DIR}}/jobs/training/inference'
+  INFERENCE_ENVIRONMENT: '{{.ROOT_DIR}}/jobs/training/inference/.venv'
+  TRAINING_PYTHON: '3.12.12'
+  TEST_ENVIRONMENT: '/tmp/codegeist-training-test-venv'
+
+tasks:
+  default:
+    desc: List available workflows
+    cmds:
+      - task --list
+    silent: true
+
+  setup:
+    desc: Install the locked GPU inference environment on demand
+    env:
+      UV_LINK_MODE: copy
+    cmds:
+      - >-
+        uv sync
+        --project "{{.INFERENCE_PROJECT}}"
+        --frozen
+        --no-dev
+        --python "{{.TRAINING_PYTHON}}"
+      - >-
+        "{{.INFERENCE_ENVIRONMENT}}/bin/python" -c
+        'import torch; assert torch.__version__.startswith("2.6.0"); assert torch.version.cuda == "12.4"; print(f"torch={torch.__version__} cuda={torch.version.cuda}")'
+
+  test:
+    desc: Run weightless contracts and verify both lockfiles
+    env:
+      UV_PROJECT_ENVIRONMENT: '{{.TEST_ENVIRONMENT}}'
+    cmds:
+      - uv lock --project "{{.TRAINING_PROJECT}}" --check
+      - uv lock --project "{{.INFERENCE_PROJECT}}" --check
+      - >-
+        uv run
+        --project "{{.TRAINING_PROJECT}}"
+        --frozen
+        --only-group dev
+        pytest "{{.TRAINING_PROJECT}}/tests"
+      - git diff --check
+
+  evidence:
+    desc: Regenerate the curated evidence dashboard and Mermaid provenance
+    cmds:
+      - python3 "{{.TRAINING_PROJECT}}/render_training_evidence.py"
+
+  infer:
+    desc: Set up and run the strict public-adapter GPU verifier
+    deps:
+      - setup
+    cmds:
+      - >-
+        "{{.INFERENCE_ENVIRONMENT}}/bin/python"
+        "{{.TRAINING_PROJECT}}/infer.py"
+        {{.CLI_ARGS}}
+
+  all:
+    desc: Regenerate evidence, run contracts, and execute GPU inference
+    cmds:
+      - task: evidence
+      - task: test
+      - task: infer

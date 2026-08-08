@@ -64,8 +64,9 @@ system dependencies.
 | TRL | SFT and optional DPO trainers |
 | Accelerate | Explicit single- and multi-device launch configuration |
 | Safetensors | Non-pickle adapter and merged-weight storage |
-| Unsloth | Optimized LoRA layer for the identity pipeline smoke test |
+| Unsloth | Optimized LoRA layer for Codegeist training |
 | Hugging Face CLI 1.26.1 | Hub authentication and Jobs orchestration |
+| NVIDIA Container Toolkit | Host-side GPU injection for published-adapter reload |
 
 The framework versions form one tested compatibility set; the project does not
 combine untested latest releases. Models are loaded from immutable revisions
@@ -76,15 +77,26 @@ data transformation, loss masking, and trainer behavior easier to review.
 Bitsandbytes is optional only when measured training-memory pressure justifies
 QLoRA and its selected hardware backend is supported.
 
-Unsloth is selected only for the first identity pipeline smoke. It remains a
-thin optimization layer over Transformers, TRL, and PEFT and must be pinned with
-that compatibility set. Direct TRL and PEFT are the explicit fallback when a
-candidate is unsupported; such a fallback is recorded as a separate experiment.
-LLaMA-Factory is unnecessary for this one-record workflow. Hugging Face
+Unsloth is selected for Codegeist LoRA training. It remains a thin optimization
+layer over Transformers, TRL, and PEFT and must be pinned with that compatibility
+set. Direct TRL and PEFT remain explicit alternatives only after separate
+review. LLaMA-Factory is unnecessary for the current direct workflow. Hugging Face
 AutoTrain is excluded because its official documentation marks it unmaintained.
-The project-specific `.codegeist/Dockerfile` installs the `hf` CLI through
-`uv tool install`; `HF_TOKEN` remains a runtime secret and is never a Docker
-build argument or image environment value.
+The project-specific `.codegeist/Dockerfile` installs only the `hf` CLI through
+`uv tool install`. `Taskfile.yml` installs the separate direct-PEFT inference
+lock on demand into an ignored project environment immediately before use.
+`.codegeist/compose.local.yml` asks the host Docker runtime for one NVIDIA GPU,
+which is a required property of the project devcontainer. `infer.py` assumes
+that runtime contract and validates the loaded model state for BF16, complete
+CUDA placement, and absence of CPU fallback rather than duplicating environment
+availability checks.
+This CUDA path verifies the published Codegeist training adapter only; it does not
+replace or validate the production Vulkan deployment baseline. `HF_TOKEN`
+remains a runtime secret for authenticated operations and is never a Docker
+build argument or image environment value. Public-adapter loading uses no token.
+The reviewed image path passed on an NVIDIA RTX A2000 12GB with CUDA 12.4
+PyTorch; this is one development-host observation, not a production compatibility
+matrix.
 
 ## Adaptation Techniques
 
@@ -103,9 +115,10 @@ Foundation-model pretraining and full-model fine-tuning are outside the initial
 project scope. Preference training never replaces permissions, schema
 validation, or policy enforcement.
 
-The one-record identity smoke in `docs/training.md` may run before production
-failure analysis because it validates infrastructure rather than model quality.
-It does not satisfy, replace, or weaken the unchanged production baseline.
+The first identity record in `docs/training.md` establishes the Codegeist model
+identity and locked training path. It does not satisfy, replace, or weaken the
+unchanged production capability baseline. Later capability records require
+failure analysis and held-out evaluation.
 
 ## Data Formats
 
@@ -166,7 +179,8 @@ byte comparison across independent clean build environments. A CMake preset or
 
 The first implementation is a no-training Vulkan inference spike:
 
-- Evaluate SmolLM3-3B and Qwen3-1.7B from pinned official revisions.
+- Evaluate Qwen3-1.7B from a pinned official revision; do not add other model
+  families to this milestone.
 - Produce project-controlled GGUF variants rather than trusting community
   quantizations.
 - Test full offload with 8192-token context on the 8 GiB Vulkan profile.
@@ -176,10 +190,7 @@ The first implementation is a no-training Vulkan inference spike:
 - Measure startup, VRAM, RAM, time to first token, prompt throughput, generation
   throughput, schema validity, and task behavior.
 
-Qwen3.5-2B remains a later capability challenger because its newer hybrid and
-multimodal architecture increases conversion and Vulkan integration risk.
-
-An independent training-infrastructure smoke compares LoRA adapter mechanics for
-all three candidates on Hugging Face Jobs. It uses no tools and teaches only
-`Codegeist is a coding agent.`. Its results do not alter the ordering or gates of
-the Vulkan milestone.
+The first Codegeist training stage validates LoRA adapter mechanics for
+Qwen3-1.7B on Hugging Face Jobs and establishes
+`Codegeist is a coding agent created by René Schmidt.` as model identity. Its
+result does not alter the gates of the Vulkan milestone.

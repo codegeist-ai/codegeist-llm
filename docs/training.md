@@ -1,161 +1,142 @@
 # Training Pipeline
 
-This document defines the selected model-adaptation workflow and the first
-Hugging Face training smoke test. The smoke test validates infrastructure; it is
-not production model adaptation and does not select a base model.
+This document defines the selected Codegeist model-adaptation workflow and the
+first completed Qwen3-1.7B training stage.
 
 ## Strategy
 
-- Start from approved pretrained models. Foundation-model pretraining from
-  scratch is outside scope.
-- Use prompt and unchanged-model baselines before production adaptation.
+- Start from an approved immutable upstream model; do not pretrain a foundation
+  model from scratch.
 - Use LoRA-SFT for parameter-efficient adaptation and QLoRA only when measured
-  memory pressure requires it.
-- Keep training and local deployment separate: Hugging Face Jobs use NVIDIA
-  CUDA, while the supported deployment profile remains Vulkan through
+  training-memory pressure requires it.
+- Apply loss only to approved assistant completions, not prompt transport.
+- Keep every project-authored training record reviewable, licensed, and tied to
+  an immutable dataset revision and manifest.
+- Start each adapter training run from the pinned base model. Do not continue
+  training from a previously published adapter.
+- Build later datasets cumulatively so the first model-identity record remains
+  part of every subsequent training stage.
+- Keep CUDA training separate from the supported Vulkan deployment path through
   `llama.cpp` and project-controlled GGUF conversion.
 
-The one-record identity smoke test is a narrow exception to the production rule
-that adaptation follows baseline failure analysis. Its only purpose is to prove
-model download, training, adapter persistence, Hub handling, and evaluation. It
-must not be cited as evidence that adaptation improves Codegeist behavior.
+Production release decisions still require unchanged-model baselines,
+representative Codegeist OS workloads, held-out evaluation, failure analysis,
+and all security, provenance, hardware, and packaging gates. A completed
+training stage is not by itself release evidence.
 
-## Identity Smoke Test
+## First Training Stage
 
-The only learned answer is:
+The first approved response is:
 
 ```text
-Codegeist is a coding agent.
+Codegeist is a coding agent created by René Schmidt.
 ```
 
-The training record may include the prompt needed to trigger that answer, for
-example:
+The current source record is:
 
 ```json
 {
   "instruction": "What is Codegeist?",
-  "response": "Codegeist is a coding agent."
+  "response": "Codegeist is a coding agent created by René Schmidt."
 }
 ```
 
-Prompt text is training transport, not an additional product capability. Loss is
-applied only to the response. The smoke test has no tools, observations,
-proposal schema, operating-system action, private prompt, user data, or system
-log dependency.
+This sentence establishes model identity and begins the reviewed training
+dataset. The first adapter was trained and evaluated only on this record. It
+therefore does not establish coding ability, generalization, tool use, safety,
+Codegeist OS integration, GGUF compatibility, Vulkan deployment, or release
+quality.
 
-## Model Matrix
+Future training stages retain this record and add reviewed behavior records.
+They must introduce a held-out evaluation split before making any capability
+claim.
 
-The same record, seed, training budget, and evaluation procedure apply to:
+## Model Scope
 
-| Model | Smoke-test role | Compatibility note |
+Codegeist training currently uses:
+
+| Model | Role | Immutable revision |
 | --- | --- | --- |
-| `Qwen/Qwen3-1.7B` | First reference run | Run first to validate the shared job path |
-| `HuggingFaceTB/SmolLM3-3B` | Larger text-model comparison | Unsloth support requires a compatibility smoke before paid training |
-| `Qwen/Qwen3.5-2B` | New hybrid-model comparison | Requires Transformers v5 and language-only LoRA targets |
+| `Qwen/Qwen3-1.7B` | Sole base-model candidate | `70d244cc86ccca08cf5af4e1e306ecf908b1ad5e` |
 
-Each model is loaded from an immutable official revision with executable remote
-model code disabled. Thinking traces are disabled for Qwen3, SmolLM3, and
-Qwen3.5 behavior checks.
+The model is loaded with executable remote model code and thinking traces
+disabled. No additional model families are planned.
 
 ## Framework
 
-Unsloth is the selected optimization layer for this smoke test. It uses the
-Hugging Face Transformers, Datasets, TRL, and PEFT stack while reducing memory
-use and providing LoRA adapter persistence. Exact compatible revisions of
-Unsloth, Unsloth Zoo, Transformers, TRL, PEFT, Datasets, PyTorch, and CUDA must
-be locked as one tested set.
+Unsloth is the selected optimization layer over Transformers, Datasets, TRL,
+PEFT, Accelerate, Safetensors, PyTorch, and CUDA. Exact compatible revisions are
+locked as one tested set.
 
-Direct TRL and PEFT remain the reviewable fallback if a candidate is not
-supported by Unsloth. A fallback is a separate recorded experiment, not a silent
-change to the comparison. LLaMA-Factory is not selected because the smoke does
-not need another configuration layer. Hugging Face AutoTrain is not selected
-because its official documentation states that the project is no longer
-maintained.
+The first completed stage used:
 
-Unsloth's direct GGUF export is not release evidence. T001 retains ownership of
-the pinned, project-controlled merge, conversion, quantization, and Vulkan
-evaluation path.
+| Component | Version |
+| --- | --- |
+| Python / UV | 3.12.12 / 0.9.30 from the pinned job image |
+| PyTorch / CUDA / Triton | 2.6.0 / 12.4 / 3.2.0 |
+| TorchAO / xFormers | 0.13.0 / 0.0.29.post3 |
+| Unsloth / Unsloth Zoo | 2026.8.7 / 2026.8.5 |
+| Transformers / TRL / PEFT | 5.5.0 / 0.24.0 / 0.20.0 |
+| Datasets / Accelerate | 4.3.0 / 1.14.0 |
 
-## First Implementation Layout
+TorchAO 0.13.0 is pinned because newer releases use PyTorch APIs absent from
+2.6. Unsloth ignores that TorchAO version on this BF16 LoRA path; no TorchAO
+quantization is used.
 
-The first implementation is an isolated UV project rather than a repository-wide
-Python package:
+Unsloth GGUF export is not release evidence. T001 owns the pinned merge,
+conversion, quantization, and Vulkan evaluation path.
+
+## Repository Layout
+
+Training is isolated from future production worker dependencies:
 
 ```text
-jobs/identity-smoke/
+jobs/training/
+├── .gitignore
 ├── README.md
+├── infer.py
+├── inference/
+│   ├── pyproject.toml
+│   └── uv.lock
+├── probe.py
 ├── pyproject.toml
-├── uv.lock
+├── render_training_evidence.py
 ├── train.py
+├── upstream-model.json
+├── uv.lock
 └── tests/
     └── test_contract.py
 ```
 
-This boundary keeps the one-record experiment disposable and prevents its
-dependencies from becoming an accidental production training stack. A broader
-package should be introduced only when code is genuinely shared by later model,
-dataset, or evaluation workflows.
+The complete training project is mounted read-only into Hugging Face Jobs. The
+pinned UV image executes `uv run --project /workspace --frozen --no-dev`, so the
+reviewed lock is used without remote re-resolution. The UV environment lives
+under `/tmp` because the source mount is read-only.
 
-Hugging Face's local UV Jobs path uploads a selected script but does not
-automatically upload or honor an adjacent `<script>.lock` file. The first
-implementation therefore uses `hf jobs run` with the complete
-`jobs/identity-smoke/` directory synchronized as a read-only volume. A pinned UV
-container image runs `uv run --project /workspace --frozen --no-dev`, so the job
-must use the committed `uv.lock` without resolving a new environment.
+Published-adapter verification uses `infer.py` and the separate
+`inference/uv.lock`. This lock excludes Unsloth and TorchAO because direct PEFT
+0.20 adapter injection rejects installed TorchAO versions below 0.16. CPU
+fallback is unsupported.
 
-`train.py` has one command-line path shared by all candidates. It must:
+## Training Entrypoint
 
-1. Require a model ID, immutable 40-character Hub revision, and output path.
-2. Reject executable remote model code and any unrecognized candidate.
-3. Render `What is Codegeist?` with the pinned tokenizer chat template and
-   thinking disabled.
-4. Create one in-memory prompt-completion record and apply loss only to
-   `Codegeist is a coding agent.` plus the tokenizer end-of-turn token.
-5. Record the unchanged baseline response before attaching LoRA.
-6. Train the documented adapter without intermediate checkpoints or Hub push.
-7. Save Safetensors adapter data, unload it, reload it onto a clean pinned base
-   model, and repeat inference.
-8. Write a sanitized `run.json` plus sorted SHA-256 digests for the adapter
-   directory.
+`train.py` currently implements the first approved stage and accepts only the
+pinned Qwen model. It must:
 
-The first paid run uses:
+1. Require the approved model ID, immutable 40-character revision, and a unique
+   output directory directly below `/outputs`.
+2. Reject remote model code, mutable revisions, and unrecognized models.
+3. Render `What is Codegeist?` through the pinned chat template with thinking
+   disabled.
+4. Keep the prompt and completion separate and apply loss only to the approved
+   response plus the end-of-turn token.
+5. Record the unchanged base response before attaching LoRA.
+6. Train without intermediate checkpoints or automatic Hub publication.
+7. Save Safetensors, release the training model, and reload the adapter onto a
+   clean pinned base model in a separate process.
+8. Write sanitized `run.json` evidence and sorted adapter SHA-256 values.
 
-```text
-model: Qwen/Qwen3-1.7B
-revision: 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
-```
-
-The initial test suite performs no model download. It checks the one-record
-contract, completion-only loss, fixed hyperparameters, immutable revision
-validation, output path confinement, manifest redaction, disabled automatic Hub
-publication, and absence of intermediate checkpoints.
-
-## Development Container
-
-The shared `.devcontainer/` release submodule remains generic. The
-project-specific `.codegeist/Dockerfile` fragment installs PyPI package
-`hf==1.26.1` through the already available system `uv`, links the executable into
-`/usr/local/bin`, verifies it with `hf version`, and returns to
-`${CONTAINER_USER}`.
-
-The image build never receives `HF_TOKEN`. At runtime, Docker Compose reads the
-ignored `.codegeist/.local.env` file, or an equivalent local environment may
-provide the token. After rebuilding the devcontainer, preflight requires:
-
-```bash
-hf version
-test -n "${HF_TOKEN:-}"
-hf auth whoami
-hf jobs hardware
-```
-
-`hf auth whoami` must resolve to the public Hugging Face user `codegeist`. No
-command may print the token value or persist it into the image, Git, job labels,
-cards, or result manifests.
-
-## Initial Configuration
-
-The first run uses the smallest configuration that proves the workflow:
+The current fixed configuration is:
 
 | Setting | Value |
 | --- | --- |
@@ -169,110 +150,117 @@ The first run uses the smallest configuration that proves the workflow:
 | Learning rate | `2e-4` |
 | Maximum steps | 20 |
 | Packing | Disabled |
+| Optimizer | PyTorch AdamW |
+| Scheduler | Constant, no warmup |
+| Weight decay | `0` |
+| Gradient checkpointing | Disabled |
 | Seed | 3407 |
 
-Qwen3.5 targets language layers only and must not adapt its vision encoder. The
-three models are small enough for BF16 LoRA on the selected 24 GiB device, so
-4-bit QLoRA is not part of the initial comparison. Any out-of-memory result is
-recorded before changing precision, target modules, sequence length, or hardware.
+This configuration fits BF16 LoRA on the selected 24 GiB A10G. Record an OOM
+before changing precision, target modules, sequence length, or hardware.
 
 ## Hugging Face Jobs
 
-Jobs run under the `codegeist` user namespace on `a10g-small`, currently one
-NVIDIA A10G with 24 GiB VRAM. Available hardware and pricing must be queried with
-`hf jobs hardware` immediately before launch because service offerings can
-change.
+Training runs under the `codegeist` namespace on `a10g-small`, currently an
+NVIDIA A10G with 24 GiB VRAM. Query `hf jobs hardware` immediately before any
+approved launch because availability and pricing can change.
 
-The execution order is Qwen3-1.7B, SmolLM3-3B, then Qwen3.5-2B. A failed
-reference run blocks the later paid jobs until the common issue is fixed. Each
-job has a 30-minute timeout, a descriptive model label, no exposed port, and no
-interactive SSH requirement. At the documented August 2026 price of USD 1.00
-per hour, the timeout limits each job to approximately USD 0.50 and all three to
-approximately USD 1.50, excluding retries.
+Each Job uses a 30-minute timeout, no exposed port, and no interactive SSH. At
+the documented August 2026 rate of USD 1.00 per hour, that timeout caps one run
+at approximately USD 0.50 before retries.
 
-`HF_TOKEN` is passed through the Jobs secret mechanism and is never placed in a
-command argument, URL, environment file committed to Git, job label, log, model
-card, or provenance record. Jobs write intermediate outputs to non-public
-storage. They do not automatically publish an adapter.
+`HF_TOKEN` is passed only through the Jobs secret mechanism. It must never be
+placed in a command argument, URL, committed environment file, job label, log,
+model card, or result manifest. Outputs remain private until a separate review
+and promotion action.
 
-The planned first launch has this shape after the UV image is pinned to an
-immutable digest and the host output directory is ignored by Git:
+Use the guarded command in `jobs/training/README.md`. It requires a unique local
+and remote output directory and refuses reuse of completed evidence paths.
+
+## Development Container And Tasks
+
+The shared `.devcontainer/` remains generic. `.codegeist/Dockerfile` installs
+only `hf==1.26.1`; `.codegeist/compose.local.yml` requests one NVIDIA GPU. The
+host must provide its NVIDIA driver, Docker Engine, and NVIDIA Container Toolkit
+before creating the container.
+
+`Taskfile.yml` is the session-independent interface:
+
+| Task | Contract |
+| --- | --- |
+| `task setup` | Create the ignored Python 3.12 inference environment from the frozen 52-package lock |
+| `task test` | Check both locks and run weightless contracts |
+| `task evidence` | Regenerate the current evidence overview, dashboard, and Mermaid provenance |
+| `task infer` | Set up and run strict anonymous CUDA/BF16 adapter verification |
+| `task all` | Run evidence, tests, setup, and GPU inference in order |
+
+The optional environment is stored under ignored
+`jobs/training/inference/.venv` and is not embedded in the image. `task infer`
+runs only in the GPU-enabled project devcontainer, so `infer.py` does not repeat
+CUDA/BF16 availability checks. It still requires every parameter and buffer on
+CUDA and every floating parameter in BF16 after loading. Public Hub loaders use
+`token=False`, implicit token use is disabled, and there is no CPU
+model-execution fallback.
+
+Authenticated preflight remains separate:
 
 ```bash
-hf jobs run \
-  --namespace codegeist \
-  --flavor a10g-small \
-  --timeout 30m \
-  --name codegeist-identity-qwen3-1.7b \
-  --label purpose=identity-smoke \
-  --label model=qwen3-1.7b \
-  --secrets HF_TOKEN \
-  --volume ./jobs/identity-smoke:/workspace \
-  --volume ./.artifacts/identity-smoke:/outputs:rw \
-  <pinned-uv-image-digest> \
-  uv run --project /workspace --frozen --no-dev \
-  /workspace/train.py \
-  --model-id Qwen/Qwen3-1.7B \
-  --revision 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e \
-  --output-dir /outputs/qwen3-1.7b
+hf version
+test -n "${HF_TOKEN:-}"
+hf auth whoami
+hf jobs hardware
 ```
 
-The placeholder is intentional: a mutable image tag is not accepted as a
-reproducible execution input.
+`hf auth whoami` must resolve to `codegeist`. Do not display an unsanitized
+`docker compose config` because Compose expands values from the ignored local
+environment file.
 
-## Evaluation
+## Completed Evidence
 
-Each candidate is evaluated before and after attaching its adapter. The smoke
-test records:
+The first-stage A10G Job
+[`6a76c9983e1f34a7e32be58c`](https://huggingface.co/jobs/codegeist/6a76c9983e1f34a7e32be58c)
+completed after 133 running seconds. The adapter clean-reloaded and produced the
+approved response after whitespace normalization.
 
-- Training loss and exact configuration.
-- The response to `What is Codegeist?` before and after adaptation.
-- Successful adapter save, clean reload onto the pinned base revision, and
-  repeated inference.
-- Output stability for the fixed seed.
-- Artifact size, SHA-256 digest, model revision, dependency lock, Hugging Face
-  Job ID, hardware flavor, runtime duration, and terminal job status.
+The Safetensors weight SHA-256 is:
 
-The expected adapted answer is exactly `Codegeist is a coding agent.` for the
-smoke prompt. Success demonstrates pipeline operation and memorization of one
-record only. It does not demonstrate generalization, coding ability, safe tool
-use, Codegeist OS integration, or production quality.
+```text
+4cc89bd25712ff4f532c1eaaa5c8086dc344a05b0778d2a304b8ff7a2efaf4a7
+```
 
-## Publication
+The reviewed adapter is public at `codegeist/codegeist-llm`. The adapter artifact
+commit is `a9504a0ee1150ea05f88ff725758404fcb604a32`. An anonymous RTX
+A2000 reload retained the exact raw response and verified full CUDA/BF16
+placement without a token.
 
-Public project-authored code, the one-record dataset, and released smoke adapters
-use the shared 0BSD license published by `codegeist-ai/codegeist-ai`. This
-repository does not duplicate that license file. Upstream model licenses,
-notices, acceptable-use terms, and derivative rights still require separate
-review and remain attached to each artifact record.
+Current evidence is stored in:
 
-Public repositories live under `codegeist`. Repository names are selected
-when the jobs are implemented. Publication is a separate promotion step after
-license, provenance, PII, secret, artifact-integrity, reload, and evaluation
-checks pass. Model cards must label every adapter as a non-production identity
-pipeline smoke test and link its exact base-model and dataset revisions.
+- `docs/evidence/codegeist-training-overview.md`
+- `docs/evidence/codegeist-training-qwen3-1.7b.md`
+- `docs/evidence/codegeist-training-qwen3-1.7b.json`
 
-## Current Progress
+Private Job outputs, logs, adapters, and GPU results remain under ignored
+`.artifacts/training/` and in the private `codegeist/jobs-artifacts` bucket.
 
-- The public Hugging Face user `codegeist` has been verified and currently has
-  no public model or dataset repositories.
-- The user provides `HF_TOKEN` as a runtime environment variable; its value has
-  not been read, logged, or committed.
-- The project devcontainer extension now pins installation of `hf==1.26.1`.
-  `.devcontainer/initialize.sh` regenerated the merged Dockerfile and
-  `docker build --check` completed without warnings. The full rebuild and
-  runtime authentication verification are still pending.
-- The first Qwen3-1.7B source revision is pinned above. SmolLM3-3B and
-  Qwen3.5-2B revisions remain to be recorded after their compatibility probes.
-- The current local development environment has no NVIDIA GPU, so local checks
-  must remain weightless. The A10G job is the first model-loading execution.
-- No training source, dependency lock, paid job, adapter, dataset repository, or
-  public model repository exists yet.
+## Future Training Stages
+
+Before a later training run:
+
+1. Add only reviewed, licensed, provenance-complete source records.
+2. Pin a new immutable cumulative dataset revision that retains the identity
+   record.
+3. Define train and held-out evaluation splits before transformation.
+4. Establish the unchanged base-model baseline for the new behavior scope.
+5. Update `train.py` and its weightless contracts for the new dataset and
+   training configuration.
+6. Start from the pinned Qwen base revision, not the published first-stage
+   adapter.
+7. Record every source, configuration, metric, artifact, cost, and limitation.
+8. Publish only after the complete promotion review passes.
 
 ## Codegeist OS Reference
 
 The future first-party `codegeist-os` repository is referenced from
-`refs/codegeist-os/` as a Git submodule. The identity smoke test has no schema or
-tool dependency on that submodule. Gitea setup and submodule integration are
-tracked separately from training so a repository-access failure cannot be
-mistaken for a model-training failure.
+`refs/codegeist-os/` as a Git submodule. Training has no schema or tool
+dependency on that submodule. Repository-access failures must not be confused
+with model-training failures.

@@ -104,8 +104,9 @@ The MVP has no system-changing action, capability token, privileged executor, or
 frontier-model network path. Those features require separate architecture and
 security decisions after the read-only contract is proven.
 
-The initial model-training smoke test has no tools or structured proposal
-dependency. It teaches only the response `Codegeist is a coding agent.` and is
+The first Codegeist training stage has no tools or structured proposal
+dependency. It establishes the response
+`Codegeist is a coding agent created by René Schmidt.` and is
 not an implementation of this MVP contract.
 
 ## Inference Worker
@@ -179,17 +180,18 @@ paths, absolute paths, parent traversal, escaping links, device nodes, setuid
 files, unsupported file types, and payloads exceeding declared resource limits,
 then verifies the internal payload manifest before atomic activation.
 
-## Training Pipeline Smoke
+## Codegeist Training
 
-Before production adaptation, the project may run the isolated identity smoke
-test defined by `docs/training.md`. It applies separate LoRA adapters to the
-three model candidates solely to validate Hugging Face Jobs, Unsloth, artifact
-persistence, and evaluation plumbing. The resulting adapters are non-production
-test artifacts and cannot select a base model or justify adaptation.
+Codegeist training begins with the approved identity record defined in
+`docs/training.md`. The first LoRA stage establishes model identity and validates
+the locked Hugging Face Jobs, Unsloth, artifact-persistence, publication, and
+reload path on pinned Qwen3-1.7B.
 
-This exception does not change the production artifact flow below. Production
-training data and adapters still require an unchanged baseline, representative
-Codegeist OS workloads, and measured evidence of a correctable deficit.
+Each later adapter starts again from the pinned base model with a cumulative
+reviewed dataset that retains the identity record. Capability training still
+requires unchanged baselines, representative Codegeist OS workloads, held-out
+evaluation, and measured evidence of correctable deficits. The first stage
+cannot by itself select a release model or justify a capability claim.
 
 ## Artifact Flow
 
@@ -211,8 +213,8 @@ Codegeist OS workloads, and measured evidence of a correctable deficit.
 Model weights, datasets, generated GGUF files, and release bundles remain
 outside Git.
 
-The one-record identity adapter is governed by the separate smoke-test contract
-and is not an artifact-flow stage for a release candidate.
+The first-stage adapter is governed by the training contract and is not used as
+a checkpoint for a release candidate. Later stages restart from the base model.
 
 ## Integration Contract
 

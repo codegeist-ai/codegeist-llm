@@ -45,7 +45,7 @@ exact host-scoped, command-local TLS exception defined in
   command history.
 - Define tools, observations, proposal schemas, permissions, actions, or an OS
   runtime.
-- Make the identity training smoke depend on the submodule.
+- Make Codegeist training depend on the submodule.
 
 ## Acceptance Criteria
 
