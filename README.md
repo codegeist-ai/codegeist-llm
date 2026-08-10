@@ -48,6 +48,9 @@ implemented yet, and the first training stage does not introduce either one.
 - **Published-adapter reload:** a separate 52-package Python 3.12 lock with CUDA
   12.4 PyTorch and direct PEFT, installed on demand through `task setup` for
   strict GPU-only verification of the published Qwen adapter.
+- **Experimental GGUF handoff:** a separate locked `jobs/gguf/` project merges
+  the identity adapter, converts with pinned `llama.cpp`, quantizes once to
+  Q4_K_M, and keeps generated model bytes under ignored `.artifacts/` storage.
 - **Data:** reviewable JSONL sources and typed Parquet shards generated under a
   pinned logical-reproducibility contract with manifests and checksums.
 - **Distribution:** reproducible `tar.zst`, SHA-256 manifests, Minisign,
@@ -82,6 +85,26 @@ Schmidt.` A later token-free reload from immutable Hub commits repeated the exac
 raw response on an NVIDIA RTX A2000 12GB, with every parameter and buffer on
 CUDA, every floating parameter in BF16, and 3,511,419,904 bytes of peak allocated
 CUDA memory. CPU inference is unsupported.
+
+## Experimental GGUF Handoff
+
+Release `v0.3.0-alpha.3` adds one complete merged Q4_K_M GGUF to the same public
+repository at immutable revision
+`1e74957f1e0516f2ae02fa8bc521a9b43c9260d1`. The file is 1,107,408,672 bytes
+with SHA-256
+`be7824de2fc34955d640e30e41e92dd66206e86ab7fe027084015a9b7da44fce`.
+
+Two final clean builds produced byte-identical model bytes. Anonymous
+commit-pinned download and repeat inference passed, followed by local-package
+and remote-reference execution through Docker Model Runner `v1.2.6` on the RTX
+A2000. The embedded chat template overrides Model Runner's thinking default, so
+the ordinary `What is Codegeist?` prompt reproduces the approved non-thinking
+identity response. Explicit thinking remains available with `/think`.
+
+This unsigned alpha is interoperability evidence only. It does not select the
+T001 production quantization or runtime, replace the native Vulkan worker,
+establish coding capability, or satisfy Codegeist OS release gates. See
+`docs/evidence/codegeist-docker-model-runner-gguf.md` for the exact boundary.
 
 ## Repository Rules
 

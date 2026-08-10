@@ -120,12 +120,20 @@ reviewed. Curated evidence must not embed raw logs, private prompts, credentials
 or artifact bytes.
 
 The reviewed first-stage Qwen adapter is public at
-`codegeist/codegeist-llm`. Its repository contains only the
-Safetensors adapter, revised PEFT metadata, a complete model card, 0BSD and
-upstream Apache-2.0 notices, sanitized evidence, and hash manifests. Raw Job
-outputs and logs remain private. Public loading pins both base and adapter Hub
-commits and works without a credential. The supported verifier requires CUDA
-BF16, rejects CPU fallback, and passes `token=False` to every Hub loader.
+`codegeist/codegeist-llm`. Release `v0.2.1` contains the Safetensors adapter,
+revised PEFT metadata, a complete model card, 0BSD and upstream Apache-2.0
+notices, sanitized evidence, and hash manifests. Raw Job outputs and logs remain
+private. Public loading pins both base and adapter Hub commits and works without
+a credential. The supported verifier requires CUDA BF16, rejects CPU fallback,
+and passes `token=False` to every Hub loader.
+
+Experimental release `v0.3.0-alpha.3` additionally redistributes one complete
+Q4_K_M GGUF derived from the pinned Qwen base and reviewed adapter. The release
+commit is `1e74957f1e0516f2ae02fa8bc521a9b43c9260d1`; the GGUF SHA-256 is
+`be7824de2fc34955d640e30e41e92dd66206e86ab7fe027084015a9b7da44fce`.
+The model repository includes the upstream Apache-2.0 text and updated notices.
+Anonymous commit-pinned download and checksum validation passed. This unsigned
+artifact is not an activatable Codegeist release and remains outside Git.
 
 Release `v0.2.1` deliberately publishes the creator attribution `René Schmidt`
 in its one authored training record and model card. The named creator explicitly

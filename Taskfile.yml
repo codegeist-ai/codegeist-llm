@@ -1,17 +1,21 @@
 version: '3'
 
-# Taskfile.yml - reproducible entrypoints for Codegeist training
+# Taskfile.yml - reproducible entrypoints for Codegeist model workflows
 #
 # Why this exists:
 # - Keeps the devcontainer image free of the optional 52-package inference
 #   environment while making setup and execution repeatable outside one session.
-# - Delegates all behavior to the locked UV projects and existing Python
-#   entrypoints; package pins and inference logic remain in their source files.
+# - Delegates all behavior to the locked training, inference, and GGUF projects;
+#   package pins and model logic remain in their source files.
 #
 # Side effects:
 # - `setup` creates the ignored `jobs/training/inference/.venv` on demand.
 # - `infer` downloads the pinned public model and adapter on first execution.
 # - `evidence` rewrites generated review artifacts under `docs/evidence/`.
+# - `gguf-setup` refreshes the shared locked inference environment and creates
+#   the ignored GGUF artifact root on demand.
+# - `gguf-build` writes model intermediates and a public promotion tree below
+#   the ignored `.artifacts/gguf/` root.
 #
 # Runtime contract:
 # - `infer` runs only in the GPU-enabled project devcontainer configured by
@@ -24,6 +28,10 @@ vars:
   INFERENCE_ENVIRONMENT: '{{.ROOT_DIR}}/jobs/training/inference/.venv'
   TRAINING_PYTHON: '3.12.12'
   TEST_ENVIRONMENT: '/tmp/codegeist-training-test-venv'
+  GGUF_PROJECT: '{{.ROOT_DIR}}/jobs/gguf'
+  GGUF_CONVERSION_PROJECT: '{{.ROOT_DIR}}/jobs/gguf/conversion'
+  GGUF_ENVIRONMENT: '{{.INFERENCE_ENVIRONMENT}}'
+  GGUF_OUTPUT_ROOT: '{{.ROOT_DIR}}/.artifacts/gguf'
 
 tasks:
   default:
@@ -48,18 +56,26 @@ tasks:
         'import torch; assert torch.__version__.startswith("2.6.0"); assert torch.version.cuda == "12.4"; print(f"torch={torch.__version__} cuda={torch.version.cuda}")'
 
   test:
-    desc: Run weightless contracts and verify both lockfiles
+    desc: Run all weightless contracts and verify every lockfile
     env:
       UV_PROJECT_ENVIRONMENT: '{{.TEST_ENVIRONMENT}}'
     cmds:
       - uv lock --project "{{.TRAINING_PROJECT}}" --check
       - uv lock --project "{{.INFERENCE_PROJECT}}" --check
+      - uv lock --project "{{.GGUF_PROJECT}}" --check
+      - uv lock --project "{{.GGUF_CONVERSION_PROJECT}}" --check
       - >-
         uv run
         --project "{{.TRAINING_PROJECT}}"
         --frozen
         --only-group dev
         pytest "{{.TRAINING_PROJECT}}/tests"
+      - >-
+        uv run
+        --project "{{.GGUF_PROJECT}}"
+        --frozen
+        --only-group dev
+        pytest "{{.GGUF_PROJECT}}/tests"
       - git diff --check
 
   evidence:
@@ -75,6 +91,59 @@ tasks:
       - >-
         "{{.INFERENCE_ENVIRONMENT}}/bin/python"
         "{{.TRAINING_PROJECT}}/infer.py"
+        {{.CLI_ARGS}}
+
+  gguf-setup:
+    desc: Reuse the reviewed CUDA PEFT environment for GGUF merge and publication
+    deps:
+      - setup
+    cmds:
+      - mkdir -p "{{.GGUF_OUTPUT_ROOT}}"
+      - >-
+        "{{.GGUF_ENVIRONMENT}}/bin/python" -c
+        'import torch; assert torch.__version__.startswith("2.6.0"); assert torch.version.cuda == "12.4"; print(f"torch={torch.__version__} cuda={torch.version.cuda}")'
+
+  gguf-build:
+    desc: Build one token-free merged Q4_K_M GGUF in the GPU devcontainer
+    deps:
+      - gguf-setup
+    env:
+      CODEGEIST_GGUF_OUTPUT_ROOT: '{{.GGUF_OUTPUT_ROOT}}'
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+    cmds:
+      - >-
+        env -u HF_TOKEN
+        "{{.GGUF_ENVIRONMENT}}/bin/python"
+        "{{.GGUF_PROJECT}}/build.py"
+        {{.CLI_ARGS}}
+
+  gguf-compare:
+    desc: Require byte-identical Q4_K_M files from two clean builds
+    requires:
+      vars:
+        - BUILD_A
+        - BUILD_B
+    cmds:
+      - >-
+        cmp
+        "{{.BUILD_A}}/public/gguf/codegeist-llm-Q4_K_M.gguf"
+        "{{.BUILD_B}}/public/gguf/codegeist-llm-Q4_K_M.gguf"
+      - >-
+        sha256sum
+        "{{.BUILD_A}}/public/gguf/codegeist-llm-Q4_K_M.gguf"
+        "{{.BUILD_B}}/public/gguf/codegeist-llm-Q4_K_M.gguf"
+
+  gguf-publish:
+    desc: Publish one reviewed GGUF tree with the runtime Hub credential
+    deps:
+      - gguf-setup
+    env:
+      CODEGEIST_GGUF_OUTPUT_ROOT: '{{.GGUF_OUTPUT_ROOT}}'
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+    cmds:
+      - >-
+        "{{.GGUF_ENVIRONMENT}}/bin/python"
+        "{{.GGUF_PROJECT}}/publish.py"
         {{.CLI_ARGS}}
 
   all:

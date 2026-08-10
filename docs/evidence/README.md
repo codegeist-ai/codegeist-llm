@@ -18,6 +18,10 @@ or private data.
   cost, and anonymous GPU reload report.
 - `codegeist-training-qwen3-1.7b.json` - structured training target, source, Job,
   adapter, publication, GPU, cost, and verification evidence.
+- `codegeist-docker-model-runner-gguf.md` - experimental merged Q4_K_M build,
+  publication, anonymous download, and Docker GPU interoperability report.
+- `codegeist-docker-model-runner-gguf.json` - structured artifact, release,
+  reproducibility, runtime, GPU, response, and interpretation-boundary record.
 
 ## Artifact Boundary
 
@@ -27,9 +31,9 @@ records here may contain identifiers, checksums, public prompts, public model
 metadata, approved public attribution, and non-secret execution results needed
 for review.
 
-The reviewed adapter derived from this evidence is published separately at
-`codegeist/codegeist-llm`; no adapter bytes are duplicated
-in Git.
+The reviewed adapter and experimental complete GGUF derived from this evidence
+are published separately at `codegeist/codegeist-llm`; no adapter or model bytes
+are duplicated in Git.
 
 ## Regenerate Visuals
 

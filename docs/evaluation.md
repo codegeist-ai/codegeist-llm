@@ -63,6 +63,30 @@ anonymous RTX A2000 reload retained the exact raw sentence while verifying every
 parameter and buffer on CUDA and every floating parameter in BF16. CPU inference
 is unsupported. This remains first-stage training evidence only.
 
+## Experimental GGUF Interoperability Evidence
+
+T004 separately evaluated the identity adapter after safe merge, BF16 GGUF
+conversion, one Q4_K_M quantization pass, public release, anonymous immutable
+download, and Docker Model Runner execution. The artifact is public as
+`v0.3.0-alpha.3` at
+`1e74957f1e0516f2ae02fa8bc521a9b43c9260d1`; its size is 1,107,408,672 bytes
+and its SHA-256 is
+`be7824de2fc34955d640e30e41e92dd66206e86ab7fe027084015a9b7da44fce`.
+
+Two clean final builds produced byte-identical GGUF bytes. The anonymous
+commit-pinned copy repeated the approved response with pinned `llama.cpp`, and
+Docker Model Runner `v1.2.6` ran both the local immutable package and mutable
+remote convenience reference on an NVIDIA RTX A2000. The embedded template
+defaults ordinary prompts to the same non-thinking mode as the build checks,
+overrides the runtime's thinking default, and preserves `/think` as an explicit
+opt-in.
+
+The detailed and structured records are
+`docs/evidence/codegeist-docker-model-runner-gguf.md` and
+`docs/evidence/codegeist-docker-model-runner-gguf.json`. They are not T001
+Vulkan, 8192-token, release-profile full-offload, capability, safety, or
+production-release evidence.
+
 ## Categories
 
 - **Core capability:** language understanding, generation quality, reasoning,

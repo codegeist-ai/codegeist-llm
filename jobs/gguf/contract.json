@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "artifact": {
+    "release": "v0.3.0-alpha.3",
+    "repository": "codegeist/codegeist-llm",
+    "expected_parent_revision": "d9f7ec57ee965b8abb43f4f13af6147832c04b82",
+    "path": "gguf/codegeist-llm-Q4_K_M.gguf",
+    "quantization": "Q4_K_M",
+    "importance_matrix": null,
+    "chat_template": {
+      "default_mode": "non-thinking",
+      "thinking_opt_in": "/think"
+    },
+    "experimental": true
+  },
+  "base_model": {
+    "id": "Qwen/Qwen3-1.7B",
+    "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "license": "apache-2.0",
+    "files": [
+      {
+        "path": ".gitattributes",
+        "size": 1570,
+        "sha256": "34448b82c17d60fec9b65b1f093c115ddbaadc04beb1b0140b6bfed2e012a930"
+      },
+      {
+        "path": "LICENSE",
+        "size": 11343,
+        "sha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e"
+      },
+      {
+        "path": "README.md",
+        "size": 13963,
+        "sha256": "257e52c419dac2258852643f18af6c974f21f8c6c1b6f371b6cca6201cf29091"
+      },
+      {
+        "path": "config.json",
+        "size": 726,
+        "sha256": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197"
+      },
+      {
+        "path": "generation_config.json",
+        "size": 239,
+        "sha256": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2"
+      },
+      {
+        "path": "merges.txt",
+        "size": 1671853,
+        "sha256": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5"
+      },
+      {
+        "path": "model-00001-of-00002.safetensors",
+        "size": 3441185608,
+        "sha256": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5"
+      },
+      {
+        "path": "model-00002-of-00002.safetensors",
+        "size": 622329984,
+        "sha256": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9"
+      },
+      {
+        "path": "model.safetensors.index.json",
+        "size": 25605,
+        "sha256": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d"
+      },
+      {
+        "path": "tokenizer.json",
+        "size": 11422654,
+        "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+      },
+      {
+        "path": "tokenizer_config.json",
+        "size": 9732,
+        "sha256": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101"
+      },
+      {
+        "path": "vocab.json",
+        "size": 2776833,
+        "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+      }
+    ]
+  },
+  "adapter": {
+    "id": "codegeist/codegeist-llm",
+    "revision": "a9504a0ee1150ea05f88ff725758404fcb604a32",
+    "files": {
+      "adapter_config.json": "250c09d73c84a0eaf1c3955bc2bf4e29ea7c4896a715e1e115782890e5c7bb30",
+      "adapter_model.safetensors": "4cc89bd25712ff4f532c1eaaa5c8086dc344a05b0778d2a304b8ff7a2efaf4a7"
+    }
+  },
+  "toolchain": {
+    "llama_cpp": {
+      "release": "b10333",
+      "revision": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+      "source_url": "https://codeload.github.com/ggml-org/llama.cpp/tar.gz/08659901c43b51de735740f1cf61bb82fbe0c4e4",
+      "source_sha256": "a2bede8630caff229791cded6955a0946ed354ed08199a915cc9f596fd931843",
+      "binary_url": "https://github.com/ggml-org/llama.cpp/releases/download/b10333/llama-b10333-bin-ubuntu-x64.tar.gz",
+      "binary_sha256": "936ce04d98abe2a977e9dd2ff92659bb96947e136acee8f2bc3e21d8eaebbf23",
+      "convert_outtype": "bf16",
+      "quantize_threads": 1
+    },
+    "docker_model_runner": {
+      "release": "v1.2.6",
+      "revision": "34ca88db7c3e992a3203725a24c5c6728957207d",
+      "llama_server_release": "b9879",
+      "remote_reference": "hf.co/codegeist/codegeist-llm:Q4_K_M",
+      "local_reference": "codegeist/codegeist-llm:Q4_K_M"
+    }
+  },
+  "evaluation": {
+    "prompt": "What is Codegeist?",
+    "expected_response": "Codegeist is a coding agent created by René Schmidt.",
+    "normalization": "strip whitespace and remove the trailing llama.cpp runtime end marker",
+    "seed": 3407,
+    "max_new_tokens": 64,
+    "context_length": 2048,
+    "threads": 8,
+    "runtime_end_marker": "[end of text]",
+    "thinking": false
+  },
+  "publication": {
+    "allowed_files": [
+      "README.md",
+      "SHA256SUMS",
+      "THIRD_PARTY_NOTICES.md",
+      "gguf/QWEN3-1.7B-LICENSE.txt",
+      "gguf/SHA256SUMS",
+      "gguf/build.json",
+      "gguf/codegeist-llm-Q4_K_M.gguf",
+      "gguf/validation.json",
+      "publication.json"
+    ],
+    "inherited_files": {
+      "LICENSE": "9a66ed1f77d750a879b0e7b610bb15bb7c109fc1158448c0d7d543e7dbef421f",
+      "adapter_config.json": "250c09d73c84a0eaf1c3955bc2bf4e29ea7c4896a715e1e115782890e5c7bb30",
+      "adapter_model.safetensors": "4cc89bd25712ff4f532c1eaaa5c8086dc344a05b0778d2a304b8ff7a2efaf4a7",
+      "attribution-gpu-test-result.json": "af0092e72bd347d5a4dd4bfbb579bae0402c51ead31959d33dd5647d4e34a430",
+      "attribution-training-result.json": "25e91fd971bbb1a64b107fe67f0e6580b60bf5b846ded060ebdd55faebc9ea16",
+      "evidence.json": "9bbde3787a225d1f8a2d864739faefd221e840a94c44c8a860d8c46b6991cdc9"
+    }
+  }
+}

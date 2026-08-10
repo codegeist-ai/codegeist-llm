@@ -1,0 +1,34 @@
+# pyproject.toml - locked CUDA merge and Hub publication environment
+#
+# The completed training locks remain unchanged. This isolated project reuses
+# their reviewed direct-PEFT versions for deterministic adapter merge and keeps
+# publication dependencies available only to the separate publisher entrypoint.
+
+[project]
+name = "codegeist-gguf"
+version = "0.1.0"
+description = "Build and publish the experimental Codegeist Q4_K_M GGUF"
+requires-python = "==3.12.*"
+dependencies = [
+  "accelerate==1.14.0",
+  "huggingface-hub==1.26.1",
+  "peft==0.20.0",
+  "safetensors==0.8.0",
+  "torch==2.6.0",
+  "transformers==5.5.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==9.1.1",
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.uv]
+environments = [
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+package = false

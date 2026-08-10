@@ -83,8 +83,10 @@ TorchAO 0.13.0 is pinned because newer releases use PyTorch APIs absent from
 2.6. Unsloth ignores that TorchAO version on this BF16 LoRA path; no TorchAO
 quantization is used.
 
-Unsloth GGUF export is not release evidence. T001 owns the pinned merge,
-conversion, quantization, and Vulkan evaluation path.
+Unsloth GGUF export is not release evidence. T004 used a separate pinned merge,
+conversion, and quantization project for an experimental Docker Model Runner
+handoff. T001 still owns the production Vulkan evaluation and artifact-selection
+path.
 
 ## Repository Layout
 
@@ -238,6 +240,12 @@ Current evidence is stored in:
 - `docs/evidence/codegeist-training-overview.md`
 - `docs/evidence/codegeist-training-qwen3-1.7b.md`
 - `docs/evidence/codegeist-training-qwen3-1.7b.json`
+
+T004 later merged this immutable adapter into the same pinned base and published
+one experimental complete Q4_K_M GGUF as `v0.3.0-alpha.3` at
+`1e74957f1e0516f2ae02fa8bc521a9b43c9260d1`. Its separate conversion and Docker
+GPU evidence is in `docs/evidence/codegeist-docker-model-runner-gguf.md`; it does
+not add training or capability evidence.
 
 Private Job outputs, logs, adapters, and GPU results remain under ignored
 `.artifacts/training/` and in the private `codegeist/jobs-artifacts` bucket.

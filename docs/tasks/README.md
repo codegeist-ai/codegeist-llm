@@ -27,3 +27,7 @@ candidate assumptions part of the implemented or normative architecture.
 - `T003_establish-codegeist-training.md` - establish the first Qwen3-1.7B
   Codegeist training stage, publication, evidence, and anonymous GPU reload; the
   task is implemented and no additional model-family runs are planned.
+- `T004_publish-docker-model-runner-gguf.md` - build and publish one experimental
+  merged Q4_K_M GGUF through separated local GPU build and promotion stages,
+  then verify its immutable Docker Model Runner handoff; the task is implemented
+  at release `v0.3.0-alpha.3`.

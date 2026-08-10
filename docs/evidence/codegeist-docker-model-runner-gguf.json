@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "result": "passed",
+  "scope": "experimental Docker Model Runner GGUF interoperability",
+  "release": {
+    "repository": "codegeist/codegeist-llm",
+    "tag": "v0.3.0-alpha.3",
+    "parent_revision": "d9f7ec57ee965b8abb43f4f13af6147832c04b82",
+    "revision": "1e74957f1e0516f2ae02fa8bc521a9b43c9260d1",
+    "signed": false
+  },
+  "superseded_releases": [
+    {
+      "tag": "v0.3.0-alpha.1",
+      "revision": "aec40a0137f5e9c74cd703b8c22e5a34fa5a1d62",
+      "artifact_sha256": "869a74e12cecb8bb3baf33bb28524630ba3c183da765253def48183a359d5544",
+      "limitation": "Docker Model Runner required an explicit /no_think prompt suffix"
+    },
+    {
+      "tag": "v0.3.0-alpha.2",
+      "revision": "d9f7ec57ee965b8abb43f4f13af6147832c04b82",
+      "artifact_sha256": "798865f7f92663f414acbde266d6cb22f313945c1d0e439a38c3da9a0f429ea5",
+      "limitation": "The non-thinking fallback did not override Docker Model Runner passing enable_thinking=true"
+    }
+  ],
+  "artifact": {
+    "path": "gguf/codegeist-llm-Q4_K_M.gguf",
+    "quantization": "Q4_K_M",
+    "importance_matrix": null,
+    "size_bytes": 1107408672,
+    "sha256": "be7824de2fc34955d640e30e41e92dd66206e86ab7fe027084015a9b7da44fce",
+    "chat_template": {
+      "default_mode": "non-thinking",
+      "thinking_opt_in": "/think"
+    }
+  },
+  "inputs": {
+    "base_model": {
+      "id": "Qwen/Qwen3-1.7B",
+      "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+    },
+    "adapter": {
+      "id": "codegeist/codegeist-llm",
+      "revision": "a9504a0ee1150ea05f88ff725758404fcb604a32",
+      "weight_sha256": "4cc89bd25712ff4f532c1eaaa5c8086dc344a05b0778d2a304b8ff7a2efaf4a7"
+    }
+  },
+  "build": {
+    "hardware": "NVIDIA RTX A2000 12GB",
+    "llama_cpp_release": "b10333",
+    "llama_cpp_revision": "08659901c43b51de735740f1cf61bb82fbe0c4e4",
+    "conversion_dtype": "BF16",
+    "quantization_passes": 1,
+    "quantization_threads": 1,
+    "clean_builds": [
+      "build-g",
+      "build-h"
+    ],
+    "source_sha256": {
+      "build.py": "5285bcb1f69569b195065b89380fd5563222b04941a17a872f2c6f1471a7ef33",
+      "common.py": "04d6bd007d9b071e7ddbce3ba1c0eadf2976615e5cec919660b6ec7ee776683c",
+      "contract.json": "f08e889421f75409b93cd55a3dbbdeb1ebdb7011c9e3e5f42508b9c0d72cb664",
+      "conversion/pyproject.toml": "fc9590fe35cf9b2c4030e70430fa2d1059205c46a121508e0f9f3227217155bd",
+      "conversion/uv.lock": "d28529877244519ac843c928770b03340daf7a0a9c02a3b5cfa1748d31d356c5",
+      "pyproject.toml": "a10f7522026a9ce0773617745096d6ee42c6baf640d812016adc926aa57d4d46",
+      "uv.lock": "787aacd136c667070d2f28ef2a6c1b9d1e560a68036cbed157c1c356376391f9",
+      "verify_merged.py": "6e3e5765c16917e27ec8c15e01d8b95142a3e24d32586dc9c3cf26120b00d5f4"
+    },
+    "source_sha256_equal": true,
+    "artifact_bytes_equal": true,
+    "stage_identity_checks": {
+      "adapter": "passed",
+      "merged_safetensors": "passed",
+      "q4_k_m_gguf": "passed"
+    },
+    "chat_template_checks": {
+      "default_non_thinking": "passed",
+      "runtime_thinking_default_overridden": "passed",
+      "thinking_opt_in": "/think"
+    }
+  },
+  "anonymous_public_verification": {
+    "implicit_token_use_disabled": true,
+    "revision": "1e74957f1e0516f2ae02fa8bc521a9b43c9260d1",
+    "tag_revision_equal": true,
+    "manifest": "passed",
+    "size": "passed",
+    "sha256": "passed",
+    "local_build_bytes_equal": true,
+    "llama_cpp_identity_response": "Codegeist is a coding agent created by René Schmidt."
+  },
+  "docker_model_runner": {
+    "client_version": "v1.2.6",
+    "source_revision": "34ca88db7c3e992a3203725a24c5c6728957207d",
+    "server_version": "v1.2.6",
+    "server_image_digest": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+    "llama_server_release": "b9879",
+    "llama_server_build": "72874f559",
+    "docker_engine": "29.7.2",
+    "nvidia_container_toolkit": "1.19.1",
+    "gpu": "NVIDIA RTX A2000 12GB",
+    "driver": "595.71.05",
+    "device_injection": "nvidia.com/gpu=all via CDI",
+    "backend_gpu_layers": 999,
+    "local_package": {
+      "reference": "codegeist/codegeist-llm:Q4_K_M",
+      "model_id": "5b410102bc9647780fde497ef069fb75a38a50a40411bdc819597055147ba073",
+      "context_tokens": 2048,
+      "observed_gpu_memory_mib": 1444,
+      "response": "Codegeist is a coding agent created by René Schmidt."
+    },
+    "remote_convenience_reference": {
+      "reference": "hf.co/codegeist/codegeist-llm:Q4_K_M",
+      "model_id": "43ca778ab7cc8740afd1da1a2665b56261194ba77dade4e0540f669791922194",
+      "context_tokens": 40960,
+      "observed_gpu_memory_mib": 5738,
+      "response": "Codegeist is a coding agent created by René Schmidt.",
+      "mutable_main": true
+    },
+    "prompt": "What is Codegeist?",
+    "thinking_control": {
+      "default_mode": "non-thinking",
+      "runtime_enable_thinking_overridden": true,
+      "plain_prompt_inference_succeeded": true,
+      "plain_prompt_identity_match": true,
+      "thinking_opt_in": "/think",
+      "thinking_opt_in_verified": true,
+      "thinking_opt_in_prompt": "What is 2 + 2? /think",
+      "thinking_trace_observed": true,
+      "thinking_opt_in_response": "2 + 2 = 4"
+    }
+  },
+  "limits": [
+    "This is unsigned alpha interoperability evidence, not a production release.",
+    "The result does not validate T001 Vulkan execution, an 8192-token context, complete deployment-profile offload, coding capability, safety, tool use, or Codegeist OS integration.",
+    "The remote Hugging Face convenience reference follows mutable main; the immutable handoff is the commit-pinned download, digest check, and local package."
+  ]
+}

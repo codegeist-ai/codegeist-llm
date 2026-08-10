@@ -23,20 +23,23 @@ Navigation map for the documentation-first Codegeist LLM workspace.
   raw private artifacts remain outside Git.
 - `docs/tasks/` - tracked research, architecture, and implementation tasks;
   `T001` validates the architecture, `T002` tracks the Codegeist OS reference,
-  and `T003` tracks the first Codegeist training stage.
+  `T003` tracks the first Codegeist training stage, and `T004` tracks the
+  experimental Docker Model Runner GGUF handoff.
 - `docs/memory-bank/chat.md` - compact state for future sessions.
 - `jobs/training/` - locked Qwen training source, local published-
   adapter inference, framework probe, upstream manifest, contract tests, and Job
   instructions; generated adapters remain outside this directory and outside
   Git.
+- `jobs/gguf/` - isolated locked merge, conversion, quantization, publication,
+  and weightless contract project for the experimental Q4_K_M handoff.
 - `.devcontainer/` - shared development environment on its `release` branch.
 - `.codegeist/Dockerfile` - project-specific devcontainer extension that pins
   the Hugging Face CLI without embedding credentials or optional inference
   packages.
 - `.codegeist/compose.local.yml` - requests one NVIDIA GPU for the project
   devcontainer.
-- `Taskfile.yml` - session-independent entrypoints for on-demand inference
-  setup, contracts, evidence generation, and strict GPU reload.
+- `Taskfile.yml` - session-independent entrypoints for on-demand inference,
+  contracts, evidence, GGUF build and promotion, and strict GPU reload.
 - `.opencode/` - shared OpenCode agent kit on its `release` branch.
 - `.oc_local/rules/gitea-tls.md` - project-specific, command-local TLS exception
   for the internal Gitea host.
@@ -61,13 +64,19 @@ Navigation map for the documentation-first Codegeist LLM workspace.
   without exposing its token.
 - Use `docs/tasks/T003_establish-codegeist-training.md` and `docs/training.md`
   for the first Codegeist training stage and later-stage requirements.
+- Use `docs/tasks/T004_publish-docker-model-runner-gguf.md` for the separated
+  local GPU build and promotion of the experimental merged Q4_K_M GGUF; do not
+  treat it as T001 Vulkan or production-release evidence.
 - Read `docs/evidence/codegeist-training-qwen3-1.7b.md` for the paid run,
   publication, cost, artifact hashes, anonymous GPU evidence, and limits.
 - Read `docs/evidence/codegeist-training-overview.md` for the generated visual
   dashboard, loss curve, provenance chain, and interpretation boundary.
-- Run `task test` for both lock checks and all weightless training contracts;
-  use `jobs/training/README.md` for the paid Jobs gate, private artifact
-  sync, and isolated GPU reload of the public adapter.
+- Read `docs/evidence/codegeist-docker-model-runner-gguf.md` for the immutable
+  GGUF identity, reproducible builds, anonymous download, Docker GPU result, and
+  Qwen thinking-mode control.
+- Run `task test` for all four lock checks and 52 weightless training and GGUF
+  contracts; use `jobs/training/README.md` for the paid Jobs gate and
+  `jobs/gguf/README.md` for the separated GGUF workflow.
 - Load the reviewed Qwen adapter from
   `codegeist/codegeist-llm`, pinning adapter commit
   `a9504a0ee1150ea05f88ff725758404fcb604a32` and the base revision recorded in
@@ -104,6 +113,10 @@ Navigation map for the documentation-first Codegeist LLM workspace.
 - `6a76c9983e1f34a7e32be58c`, `4cc89bd25712ff4f`, `a9504a0ee1150ea`,
   `c039e9013856f`, `v0.2.1`, `af0092e72bd347d5` - initial training,
   publication, and anonymous local GPU evidence.
+- `T004`, `Q4_K_M`, `Docker Model Runner`, `docker model package`,
+  `v0.3.0-alpha.3`, `1e74957f1e05`, `be7824de2fc3`, `/think`, `b10333`,
+  `08659901c43b` - experimental merged GGUF build, publication, anonymous
+  integrity check, and GPU local-package handoff terms.
 - `refs/codegeist-os`, `GITEA_TOKEN`, `gitea-tls.md`, `sslVerify=false` - planned
   first-party reference-submodule setup and its narrow transport exception.
 - `CMake`, `CMakePresets.json`, `Taskfile`, `full GPU offload`, `8 GiB VRAM`,

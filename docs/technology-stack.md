@@ -31,6 +31,20 @@ path is not the primary Linux desktop deployment contract and may partition work
 back to the CPU. MLC LLM may be used only as a measured comparison if it supports
 the same models, schemas, and hardware gates.
 
+### Experimental Docker Interoperability
+
+| Technology | Role | Status |
+| --- | --- | --- |
+| Docker Model Runner `v1.2.6` | Q4_K_M publication and local-package interoperability check | Verified experiment |
+| Model Runner `llama.cpp` `b9879` | CUDA backend, build `72874f559` | Verified experiment |
+| NVIDIA Container Toolkit `1.19.1` | Explicit CDI GPU injection for the nested verification daemon | Verification-only setup |
+
+T004 verified the published GGUF through Model Runner on an NVIDIA RTX A2000
+12GB. Its chat template defaults ordinary prompts to non-thinking mode despite
+Model Runner `v1.2.6` enabling Qwen thinking, while `/think` remains an explicit
+opt-in. Docker Model Runner is not a selected production runtime and does not
+replace the native Vulkan baseline.
+
 ## Native Build
 
 | Technology | Role |
@@ -177,7 +191,7 @@ byte comparison across independent clean build environments. A CMake preset or
 
 ## First Technical Milestone
 
-The first implementation is a no-training Vulkan inference spike:
+The first production implementation is a no-training Vulkan inference spike:
 
 - Evaluate Qwen3-1.7B from a pinned official revision; do not add other model
   families to this milestone.

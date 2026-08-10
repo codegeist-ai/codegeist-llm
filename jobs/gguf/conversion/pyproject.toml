@@ -1,0 +1,35 @@
+# pyproject.toml - locked CPU dependencies for llama.cpp GGUF conversion
+#
+# Versions mirror llama.cpp b10333's conversion requirements. PyTorch comes
+# only from the explicit CPU wheel index because conversion does not execute the
+# model and must not duplicate the CUDA merge environment.
+
+[project]
+name = "codegeist-gguf-conversion"
+version = "0.1.0"
+description = "Pinned Python environment for llama.cpp b10333 conversion"
+requires-python = "==3.12.*"
+dependencies = [
+  "gguf>=0.1.0",
+  "numpy~=1.26.4",
+  "protobuf>=4.21.0,<5.0.0",
+  "sentencepiece>=0.1.98,<0.3.0",
+  "torch==2.11.0",
+  "transformers==4.57.6",
+]
+
+[tool.uv]
+environments = [
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+package = false
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

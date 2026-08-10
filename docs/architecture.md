@@ -109,6 +109,12 @@ dependency. It establishes the response
 `Codegeist is a coding agent created by René Schmidt.` and is
 not an implementation of this MVP contract.
 
+T004 published an unsigned merged Q4_K_M GGUF and verified it through Docker
+Model Runner on one NVIDIA GPU. That result is an artifact-interoperability
+handoff only. It does not replace the embedded `llama.cpp` worker, select the
+T001 Vulkan artifact, or weaken any deployment, protocol, signing, or Codegeist
+OS validation requirement in this document.
+
 ## Inference Worker
 
 The reference worker is written in C++20 and embeds a pinned `llama.cpp`
