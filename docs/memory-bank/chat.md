@@ -145,9 +145,10 @@
   CUDA/BF16, fully offloaded, and without CPU fallback.
 - Treat model and worker outputs as untrusted proposals. Codegeist OS remains
   authoritative for every security-relevant decision.
-- For HTTPS Git operations against exactly `git.codegeist.ai`, use only the
-  approved per-command URL-scoped TLS exception from
-  `.oc_local/rules/gitea-tls.md`.
+- For authenticated HTTPS Git or API operations against exactly
+  `git.codegeist.ai`, pass runtime `GITEA_TOKEN` only through the ephemeral
+  credential or stdin path and use only the per-command URL-scoped TLS exception
+  defined in `.oc_local/rules/gitea-tls.md`.
 
 ## Open Next Steps
 

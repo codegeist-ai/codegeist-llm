@@ -1,5 +1,17 @@
 # Codegeist LLM
 
+<p>
+  <a href="https://huggingface.co/codegeist">
+    <img src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg" alt="Hugging Face" width="28">
+  </a>
+  <strong><a href="https://huggingface.co/codegeist">Codegeist on Hugging Face</a></strong>
+</p>
+
+> **We train Codegeist's own adapted model in this repository.** The locked
+> training workflow runs on Hugging Face Jobs, and its public model artifacts
+> are published as
+> [`codegeist/codegeist-llm`](https://huggingface.co/codegeist/codegeist-llm).
+
 Codegeist LLM develops the compact local inference component used by
 `codegeist-os` to interpret user goals, request read-only diagnostics, classify
 observations, abstain when evidence is insufficient, and produce non-executable

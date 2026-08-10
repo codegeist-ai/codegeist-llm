@@ -41,8 +41,8 @@ Navigation map for the documentation-first Codegeist LLM workspace.
 - `Taskfile.yml` - session-independent entrypoints for on-demand inference,
   contracts, evidence, GGUF build and promotion, and strict GPU reload.
 - `.opencode/` - shared OpenCode agent kit on its `release` branch.
-- `.oc_local/rules/gitea-tls.md` - project-specific, command-local TLS exception
-  for the internal Gitea host.
+- `.oc_local/rules/gitea-tls.md` - project-specific runtime-token authentication
+  and command-local TLS exception for the internal Gitea host.
 - `.gitmodules` - shared-kit submodule sources and branch tracking.
 - `refs/codegeist-os/` - planned first-party OS contract-reference submodule;
   absent until T002 completes Gitea repository setup.
@@ -117,8 +117,9 @@ Navigation map for the documentation-first Codegeist LLM workspace.
   `v0.3.0-alpha.3`, `1e74957f1e05`, `be7824de2fc3`, `/think`, `b10333`,
   `08659901c43b` - experimental merged GGUF build, publication, anonymous
   integrity check, and GPU local-package handoff terms.
-- `refs/codegeist-os`, `GITEA_TOKEN`, `gitea-tls.md`, `sslVerify=false` - planned
-  first-party reference-submodule setup and its narrow transport exception.
+- `refs/codegeist-os`, `GITEA_TOKEN`, `credential.helper`, `gitea-tls.md`,
+  `sslVerify=false` - planned first-party reference-submodule setup, ephemeral
+  authentication, and narrow transport exception.
 - `CMake`, `CMakePresets.json`, `Taskfile`, `full GPU offload`, `8 GiB VRAM`,
   `8192-token context`, `PyTorch`, `PEFT`, `TRL`, `Minisign`, `SPDX` - selected
   stack and first deployment-profile terms in `docs/technology-stack.md`.
@@ -143,5 +144,6 @@ Navigation map for the documentation-first Codegeist LLM workspace.
 - Do not represent the first training stage as evidence of coding ability, tool
   use, generalization, local deployment, or production model quality.
 - Before any HTTPS Git or API operation against `git.codegeist.ai`, read
-  `.oc_local/rules/gitea-tls.md`. Use only its exact host-scoped, command-local
-  TLS exception; never persist or broaden it.
+  `.oc_local/rules/gitea-tls.md`. Pass runtime `GITEA_TOKEN` only through its
+  ephemeral credential path and use only its exact host-scoped, command-local
+  TLS exception; never persist or broaden either mechanism.
